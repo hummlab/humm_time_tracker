@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function memberDoc(orgId) {
+      return /databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid);
+    }
+
+    function isMember(orgId) {
+      return isAuthenticated() && exists(memberDoc(orgId));
+    }
+
+    function memberRole(orgId) {
+      return get(memberDoc(orgId)).data.role;
+    }
+
+    function isOwner(orgId) {
+      return isMember(orgId) && memberRole(orgId) == 'owner';
+    }
+
+    function isAdmin(orgId) {
+      return isMember(orgId) && (memberRole(orgId) == 'owner' || memberRole(orgId) == 'admin');
+    }
+
+    function isManager(orgId) {
+      return isMember(orgId) &&
+        (memberRole(orgId) == 'owner' || memberRole(orgId) == 'admin' || memberRole(orgId) == 'manager');
+    }
+
+    function hasManagerAccess(orgId) {
+      return isManager(orgId);
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    match /organizations/{orgId} {
+      allow create: if isAuthenticated() && request.resource.data.ownerUserId == request.auth.uid;
+      allow read: if isMember(orgId);
+      allow update: if isAdmin(orgId);
+      allow delete: if isOwner(orgId);
+
+      match /members/{memberId} {
+        allow read: if isMember(orgId);
+        allow create: if isAdmin(orgId) || (
+          isAuthenticated() &&
+          request.auth.uid == memberId &&
+          request.resource.data.role == 'owner' &&
+          get(/databases/$(database)/documents/organizations/$(orgId)).data.ownerUserId == request.auth.uid
+        );
+        allow update: if isAdmin(orgId) || (isAuthenticated() && request.auth.uid == memberId);
+        allow delete: if isAdmin(orgId);
+      }
+
+      match /invites/{inviteId} {
+        allow read: if hasManagerAccess(orgId);
+        allow create, update, delete: if hasManagerAccess(orgId);
+      }
+
+      match /clients/{clientId} {
+        allow read: if isMember(orgId);
+        allow write: if hasManagerAccess(orgId);
+      }
+
+      match /projects/{projectId} {
+        allow read: if isMember(orgId);
+        allow write: if hasManagerAccess(orgId);
+      }
+
+      match /teamMembers/{teamMemberId} {
+        allow read: if isMember(orgId);
+        allow create, delete: if hasManagerAccess(orgId);
+        allow update: if hasManagerAccess(orgId);
+      }
+
+      match /tags/{tagId} {
+        allow read: if isMember(orgId);
+        allow write: if hasManagerAccess(orgId);
+      }
+
+      match /timeEntries/{entryId} {
+        allow read: if isMember(orgId);
+        allow create: if isMember(orgId);
+        allow update, delete: if isMember(orgId) &&
+          (resource.data.createdByUserId == request.auth.uid || hasManagerAccess(orgId));
+      }
+
+      match /clickup_tasks/{taskId} {
+        allow read: if isMember(orgId);
+        allow write: if hasManagerAccess(orgId);
+      }
+
+      match /settings/{docId} {
+        allow read: if isMember(orgId);
+        allow write: if hasManagerAccess(orgId);
+      }
+    }
+  }
+}
