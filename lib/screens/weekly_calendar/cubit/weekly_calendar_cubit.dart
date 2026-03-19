@@ -63,7 +63,11 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   }
 
   void deleteTimeEntry(String id) {
-    _timeDataProvider.deleteTimeEntry(id);
+    final updatedWeekEntries = state.weekEntries.where((entry) => entry.id != id).toList();
+    final weekTotalMinutes = updatedWeekEntries.fold<int>(0, (sum, e) => sum + e.durationMinutes);
+    emit(state.copyWith(weekEntries: updatedWeekEntries, weekTotalMinutes: weekTotalMinutes));
+
+    unawaited(_timeDataProvider.deleteTimeEntry(id));
   }
 
   void addTimeEntry(
@@ -74,13 +78,33 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
     List<String>? tagIds,
     DateTime? startTime,
   }) {
-    _timeDataProvider.addTimeEntry(
-      description,
-      durationMinutes,
-      date,
-      projectId: projectId,
-      tagIds: tagIds,
-      startTime: startTime,
+    final currentUserId = _timeDataProvider.currentUserId;
+    if (currentUserId != null) {
+      final optimisticEntry = TimeEntry(
+        id: 'local_${DateTime.now().microsecondsSinceEpoch}',
+        description: description,
+        durationMinutes: durationMinutes,
+        date: DateTime(date.year, date.month, date.day),
+        projectId: projectId,
+        tagIds: tagIds ?? const [],
+        createdByUserId: currentUserId,
+        createdAt: DateTime.now(),
+        startTime: startTime,
+      );
+      final updatedWeekEntries = [...state.weekEntries, optimisticEntry];
+      final weekTotalMinutes = updatedWeekEntries.fold<int>(0, (sum, e) => sum + e.durationMinutes);
+      emit(state.copyWith(weekEntries: updatedWeekEntries, weekTotalMinutes: weekTotalMinutes));
+    }
+
+    unawaited(
+      _timeDataProvider.addTimeEntry(
+        description,
+        durationMinutes,
+        date,
+        projectId: projectId,
+        tagIds: tagIds,
+        startTime: startTime,
+      ),
     );
   }
 

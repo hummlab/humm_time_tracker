@@ -37,6 +37,7 @@ class TimeDataProvider extends ChangeNotifier {
   TagsRepository? _tagsRepository;
   TimeEntriesRepository? _timeEntriesRepository;
   WorkspaceRepository? _workspaceRepository;
+  VoidCallback? _workspaceRepositoryListener;
 
   DateTime _selectedDate = DateTime.now();
   List<int> _lastUsedDurations = [];
@@ -89,12 +90,21 @@ class TimeDataProvider extends ChangeNotifier {
     required TimeEntriesRepository timeEntriesRepository,
     required WorkspaceRepository workspaceRepository,
   }) {
+    if (_workspaceRepositoryListener != null && _workspaceRepository != null) {
+      _workspaceRepository!.removeListener(_workspaceRepositoryListener!);
+    }
+
     _clientsRepository = clientsRepository;
     _projectsRepository = projectsRepository;
     _teamMembersRepository = teamMembersRepository;
     _tagsRepository = tagsRepository;
     _timeEntriesRepository = timeEntriesRepository;
     _workspaceRepository = workspaceRepository;
+
+    _workspaceRepositoryListener = () {
+      notifyListeners();
+    };
+    _workspaceRepository!.addListener(_workspaceRepositoryListener!);
   }
 
   List<TimeEntry> getEntriesForDate(DateTime date) {
@@ -172,6 +182,9 @@ class TimeDataProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (_workspaceRepositoryListener != null && _workspaceRepository != null) {
+      _workspaceRepository!.removeListener(_workspaceRepositoryListener!);
+    }
     _cancelSubscriptions();
     super.dispose();
   }

@@ -152,15 +152,9 @@ Future<void> showWeeklyEntryDialog({
                             ],
                           ),
                           const SizedBox(height: 12),
-                          _buildProjectSelector(
-                            projects,
-                            selectedProjectId,
-                            (val) {
-                              setDialogState(() => selectedProjectId = val);
-                            },
-                            cubit.getProjectById,
-                            state,
-                          ),
+                          _buildProjectSelector(projects, selectedProjectId, (val) {
+                            setDialogState(() => selectedProjectId = val);
+                          }, state),
                           const SizedBox(height: 12),
                           _buildTagSelector(tags, selectedTagIds, (tagId) {
                             setDialogState(() {
@@ -322,7 +316,6 @@ Widget _buildProjectSelector(
   List<Project> projects,
   String? selectedId,
   Function(String?) onChanged,
-  Project? Function(String? id) getProjectById,
   WeeklyCalendarState state,
 ) {
   Project? selectedProject;
@@ -335,8 +328,15 @@ Widget _buildProjectSelector(
     }
   }
 
+  final projectsById = {for (final project in projects) project.id: project};
   final recentProjectIds =
-      state.weekEntries.where((e) => e.projectId != null).take(10).map((e) => e.projectId!).toSet().toList();
+      state.weekEntries
+          .where((e) => e.projectId != null)
+          .map((e) => e.projectId!)
+          .where((projectId) => projectsById.containsKey(projectId))
+          .take(10)
+          .toSet()
+          .toList();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,7 +352,7 @@ Widget _buildProjectSelector(
           runSpacing: 8,
           children:
               recentProjectIds.map((id) {
-                final project = getProjectById(id);
+                final project = projectsById[id];
                 if (project == null) return const SizedBox.shrink();
                 final color = AppTheme.colorFromHex(project.color);
                 final isSelected = selectedId == id;
