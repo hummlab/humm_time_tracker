@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:time_tracker/cubit/base_cubit.dart';
 import 'package:time_tracker/data_providers/auth/auth_data_provider.dart';
 import 'package:time_tracker/data_providers/time/time_data_provider.dart';
@@ -56,7 +58,8 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   }
 
   void updateTimeEntry(TimeEntry entry) {
-    _timeDataProvider.updateTimeEntry(entry);
+    _applyOptimisticEntryUpdate(entry);
+    unawaited(_timeDataProvider.updateTimeEntry(entry));
   }
 
   void deleteTimeEntry(String id) {
@@ -136,5 +139,12 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
     _timeDataProvider.removeListener(_syncFromProvider);
     _authDataProvider.removeListener(_syncFromProvider);
     super.dispose();
+  }
+
+  void _applyOptimisticEntryUpdate(TimeEntry updatedEntry) {
+    final updatedWeekEntries =
+        state.weekEntries.map((entry) => entry.id == updatedEntry.id ? updatedEntry : entry).toList();
+    final weekTotalMinutes = updatedWeekEntries.fold<int>(0, (sum, e) => sum + e.durationMinutes);
+    emit(state.copyWith(weekEntries: updatedWeekEntries, weekTotalMinutes: weekTotalMinutes));
   }
 }

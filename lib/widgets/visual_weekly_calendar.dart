@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -56,9 +58,19 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   int? _dragPreviewDayIndex;
   double? _dragPreviewTop;
   double? _dragPreviewHeight;
+  Offset? _dragCursorLocalPosition;
 
   // Tooltip & Hover state
   Offset? _hoverPosition;
+  final Map<String, TimeEntry> _optimisticEntries = {};
+  final Map<String, Timer> _optimisticEntryTimers = {};
+
+  List<TimeEntry> get _displayEntries {
+    if (_optimisticEntries.isEmpty) return widget.entries;
+    return widget.entries.map((entry) {
+      return _optimisticEntries[entry.id] ?? entry;
+    }).toList();
+  }
 
   void _clearSelection() {
     if (_selectionStart == null && _selectionEnd == null && _selectionDayIndex == null) {
@@ -79,8 +91,52 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
   @override
   void dispose() {
+    for (final timer in _optimisticEntryTimers.values) {
+      timer.cancel();
+    }
+    _optimisticEntryTimers.clear();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant VisualWeeklyCalendar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_optimisticEntries.isEmpty) return;
+
+    final entriesById = {for (final entry in widget.entries) entry.id: entry};
+    final confirmedIds = <String>[];
+
+    _optimisticEntries.forEach((id, optimisticEntry) {
+      final persistedEntry = entriesById[id];
+      if (persistedEntry == null) {
+        confirmedIds.add(id);
+        return;
+      }
+      if (persistedEntry.startTime == optimisticEntry.startTime &&
+          persistedEntry.durationMinutes == optimisticEntry.durationMinutes &&
+          persistedEntry.date == optimisticEntry.date) {
+        confirmedIds.add(id);
+      }
+    });
+
+    if (confirmedIds.isEmpty) return;
+    for (final id in confirmedIds) {
+      _optimisticEntries.remove(id);
+      _optimisticEntryTimers.remove(id)?.cancel();
+    }
+  }
+
+  void _setOptimisticEntry(TimeEntry entry) {
+    _optimisticEntries[entry.id] = entry;
+    _optimisticEntryTimers.remove(entry.id)?.cancel();
+    _optimisticEntryTimers[entry.id] = Timer(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      setState(() {
+        _optimisticEntries.remove(entry.id);
+      });
+      _optimisticEntryTimers.remove(entry.id);
+    });
   }
 
   void _jumpToDefaultHour() {
@@ -97,10 +153,11 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final dayWidth = (constraints.maxWidth - timeColumnWidth) / 7;
+        final displayEntries = _displayEntries;
 
         return Column(
           children: [
-            _buildDayHeader(dayWidth),
+            _buildDayHeader(dayWidth, displayEntries),
             Expanded(
               child: SingleChildScrollView(
                 controller: _scrollController,
@@ -123,12 +180,14 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                         _buildGrid(dayWidth),
                         if (_selectionStart != null && _selectionEnd != null && _selectionDayIndex != null)
                           _buildSelectionBlock(dayWidth),
-                        ...widget.entries.map((entry) => _buildEntryBlock(entry, dayWidth)),
+                        ...displayEntries.map((entry) => _buildEntryBlock(entry, dayWidth)),
                         if (_draggingEntry != null &&
                             _dragPreviewDayIndex != null &&
                             _dragPreviewTop != null &&
                             _dragPreviewHeight != null)
                           _buildDragPreview(dayWidth),
+                        if ((_draggingEntry != null || _resizingEntryId != null) && _dragCursorLocalPosition != null)
+                          _buildActiveDragTooltip(),
                         _buildCurrentTimeIndicator(dayWidth),
                         if (_hoverPosition != null &&
                             _selectionStart == null &&
@@ -169,6 +228,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     setState(() {
       _dragPreviewTop = snappedTop;
       _dragPreviewDayIndex = clampedDayIndex;
+      _dragCursorLocalPosition = localOffset;
     });
   }
 
@@ -239,6 +299,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     setState(() {
       _dragPreviewTop = newTop;
       _dragPreviewHeight = newHeight;
+      _dragCursorLocalPosition = localOffset;
     });
   }
 
@@ -274,6 +335,12 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     );
 
     final entry = _draggingEntry!;
+    final updatedEntry = entry.copyWith(
+      date: DateTime(newStart.year, newStart.month, newStart.day),
+      startTime: newStart,
+      durationMinutes: snappedDurationMinutes,
+    );
+    _setOptimisticEntry(updatedEntry);
 
     setState(() {
       _resizeEdge = null;
@@ -286,12 +353,13 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
       _dragPreviewDayIndex = null;
       _dragPreviewTop = null;
       _dragPreviewHeight = null;
+      _dragCursorLocalPosition = null;
     });
 
     widget.onEntryMoved(entry, newStart, snappedDurationMinutes);
   }
 
-  Widget _buildDayHeader(double dayWidth) {
+  Widget _buildDayHeader(double dayWidth, List<TimeEntry> entries) {
     final today = DateTime.now();
     return Container(
       padding: EdgeInsets.only(left: timeColumnWidth),
@@ -304,7 +372,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
           final day = widget.weekStart.add(Duration(days: index));
           final isToday = day.year == today.year && day.month == today.month && day.day == today.day;
 
-          final dayEntries = widget.entries.where((e) {
+          final dayEntries = entries.where((e) {
             final entryStart = e.startTime ?? e.createdAt.subtract(Duration(minutes: e.durationMinutes));
             return entryStart.year == day.year && entryStart.month == day.month && entryStart.day == day.day;
           });
@@ -431,11 +499,17 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
                     final baseDate = widget.weekStart.add(Duration(days: dayIndex));
                     final newStart = DateTime(baseDate.year, baseDate.month, baseDate.day, h, m);
+                    final updatedEntry = details.data.copyWith(
+                      date: DateTime(newStart.year, newStart.month, newStart.day),
+                      startTime: newStart,
+                    );
+                    _setOptimisticEntry(updatedEntry);
                     setState(() {
                       _draggingEntry = null;
                       _dragPreviewDayIndex = null;
                       _dragPreviewTop = null;
                       _dragPreviewHeight = null;
+                      _dragCursorLocalPosition = null;
                     });
                     widget.onEntryMoved(details.data, newStart);
                   },
@@ -664,6 +738,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                 _dragPreviewDayIndex = null;
                 _dragPreviewTop = null;
                 _dragPreviewHeight = null;
+                _dragCursorLocalPosition = null;
               });
             }
           },
@@ -673,6 +748,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
               _dragPreviewDayIndex = null;
               _dragPreviewTop = null;
               _dragPreviewHeight = null;
+              _dragCursorLocalPosition = null;
             });
           },
           feedback: const Material(color: Colors.transparent, child: SizedBox.shrink()),
@@ -828,6 +904,45 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
           Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
           Expanded(child: Container(height: 1, color: Colors.red)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActiveDragTooltip() {
+    if (_dragCursorLocalPosition == null) return const SizedBox.shrink();
+
+    final int anchorMinutes;
+    if (_resizingEntryId != null && _resizeEdge == _ResizeEdge.bottom) {
+      final bottom = (_dragPreviewTop ?? 0) + (_dragPreviewHeight ?? 0);
+      anchorMinutes = ((bottom / hourHeight) * 60).round();
+    } else {
+      anchorMinutes = (((_dragPreviewTop ?? 0) / hourHeight) * 60).round();
+    }
+
+    final snappedMinutes = ((anchorMinutes / 15).round() * 15).toInt();
+    final h = (snappedMinutes ~/ 60).clamp(0, 23);
+    final m = (snappedMinutes % 60).clamp(0, 59);
+    final timeLabel = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+
+    final dx = _dragCursorLocalPosition!.dx + 12;
+    final dy = _dragCursorLocalPosition!.dy - 28;
+
+    return Positioned(
+      left: dx,
+      top: dy,
+      child: IgnorePointer(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.cardDark.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppTheme.borderDark),
+          ),
+          child: Text(
+            timeLabel,
+            style: const TextStyle(color: AppTheme.primaryAccent, fontSize: 12, fontWeight: FontWeight.w800),
+          ),
+        ),
       ),
     );
   }
