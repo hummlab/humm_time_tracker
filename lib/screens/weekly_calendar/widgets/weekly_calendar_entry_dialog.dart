@@ -25,20 +25,8 @@ Future<void> showWeeklyEntryDialog({
   String? selectedProjectId = existingEntry?.projectId;
   List<String> selectedTagIds = List.from(existingEntry?.tagIds ?? []);
 
-  final size = MediaQuery.of(context).size;
+  final mediaQuery = MediaQuery.of(context);
   const dialogWidth = 320.0;
-
-  double left;
-  if (position.dx + dialogWidth + 20 < size.width) {
-    left = position.dx + 20;
-  } else if (position.dx - dialogWidth - 20 > 0) {
-    left = position.dx - dialogWidth - 20;
-  } else {
-    left = (size.width - dialogWidth) / 2;
-  }
-
-  double top = position.dy - 60;
-  top = top.clamp(20.0, size.height - 350.0);
 
   showGeneralDialog(
     context: context,
@@ -51,6 +39,9 @@ Future<void> showWeeklyEntryDialog({
           builder: (context, setDialogState) {
             final projects = cubit.projects;
             final tags = cubit.tags;
+            if (selectedProjectId != null && projects.every((p) => p.id != selectedProjectId)) {
+              selectedProjectId = null;
+            }
             final durationMinutes = currentEnd.difference(currentStart).inMinutes.clamp(1, 1440);
             final durationHours = (durationMinutes / 60).floor();
             final durationRemainderMinutes = durationMinutes % 60;
@@ -62,9 +53,11 @@ Future<void> showWeeklyEntryDialog({
 
             return Stack(
               children: [
-                Positioned(
-                  left: left,
-                  top: top,
+                CustomSingleChildLayout(
+                  delegate: _AnchoredDialogLayoutDelegate(
+                    anchor: position,
+                    viewportPadding: mediaQuery.padding + mediaQuery.viewInsets + const EdgeInsets.all(20),
+                  ),
                   child: Material(
                     color: Colors.transparent,
                     child: Container(
@@ -277,6 +270,52 @@ Future<void> showWeeklyEntryDialog({
           },
         ),
   ).then((_) => onDialogClosed?.call());
+}
+
+class _AnchoredDialogLayoutDelegate extends SingleChildLayoutDelegate {
+  _AnchoredDialogLayoutDelegate({required this.anchor, required this.viewportPadding});
+
+  final Offset anchor;
+  final EdgeInsets viewportPadding;
+  static const double _horizontalGap = 20;
+  static const double _verticalOffset = -60;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    final maxWidth = (constraints.maxWidth - viewportPadding.horizontal).clamp(0.0, constraints.maxWidth);
+    final maxHeight = (constraints.maxHeight - viewportPadding.vertical).clamp(0.0, constraints.maxHeight);
+    return BoxConstraints(maxWidth: maxWidth, maxHeight: maxHeight);
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final minX = viewportPadding.left;
+    final maxX = size.width - viewportPadding.right - childSize.width;
+    final minY = viewportPadding.top;
+    final maxY = size.height - viewportPadding.bottom - childSize.height;
+
+    final rightCandidate = anchor.dx + _horizontalGap;
+    final leftCandidate = anchor.dx - childSize.width - _horizontalGap;
+
+    double x;
+    if (rightCandidate <= maxX) {
+      x = rightCandidate;
+    } else if (leftCandidate >= minX) {
+      x = leftCandidate;
+    } else {
+      x = (anchor.dx - (childSize.width / 2)).clamp(minX, maxX);
+    }
+
+    final preferredY = anchor.dy + _verticalOffset;
+    final y = preferredY.clamp(minY, maxY);
+
+    return Offset(maxX < minX ? minX : x, maxY < minY ? minY : y);
+  }
+
+  @override
+  bool shouldRelayout(covariant _AnchoredDialogLayoutDelegate oldDelegate) {
+    return anchor != oldDelegate.anchor || viewportPadding != oldDelegate.viewportPadding;
+  }
 }
 
 Widget _buildProjectSelector(

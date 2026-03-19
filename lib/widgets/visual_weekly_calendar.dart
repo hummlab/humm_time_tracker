@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 import '../models/projects/project.dart';
 import '../models/time/time_entry.dart';
-import '../data_providers/time/time_data_provider.dart';
 import '../theme/app_theme.dart';
 
 enum _ResizeEdge { top, bottom }
@@ -15,6 +13,7 @@ class VisualWeeklyCalendar extends StatefulWidget {
   final Function(DateTime startTime, DateTime endTime, Offset position, VoidCallback clearSelection) onSlotTap;
   final Function(TimeEntry entry, Offset position) onEntryTap;
   final Function(TimeEntry entry, DateTime newStart, [int? newDuration]) onEntryMoved;
+  final Project? Function(String? id) getProjectById;
 
   const VisualWeeklyCalendar({
     super.key,
@@ -23,6 +22,7 @@ class VisualWeeklyCalendar extends StatefulWidget {
     required this.onSlotTap,
     required this.onEntryTap,
     required this.onEntryMoved,
+    required this.getProjectById,
   });
 
   @override
@@ -74,15 +74,22 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpTo(hourHeight * 8);
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToDefaultHour());
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _jumpToDefaultHour() {
+    if (!mounted) return;
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(hourHeight * 8);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToDefaultHour());
   }
 
   @override
@@ -575,8 +582,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
   Widget _buildDragPreview(double dayWidth) {
     final entry = _draggingEntry!;
-    final provider = context.read<TimeDataProvider>();
-    final Project? project = entry.projectId != null ? provider.getProjectById(entry.projectId!) : null;
+    final Project? project = entry.projectId != null ? widget.getProjectById(entry.projectId!) : null;
     final color = project != null ? AppTheme.colorFromHex(project.color) : AppTheme.primaryAccent;
 
     final left = timeColumnWidth + (_dragPreviewDayIndex! * dayWidth);
@@ -600,8 +606,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   }
 
   Widget _buildEntryBlock(TimeEntry entry, double dayWidth) {
-    final provider = context.read<TimeDataProvider>();
-    final Project? project = entry.projectId != null ? provider.getProjectById(entry.projectId!) : null;
+    final Project? project = entry.projectId != null ? widget.getProjectById(entry.projectId!) : null;
     final color = project != null ? AppTheme.colorFromHex(project.color) : AppTheme.primaryAccent;
 
     final entryStart = entry.startTime ?? entry.createdAt.subtract(Duration(minutes: entry.durationMinutes));

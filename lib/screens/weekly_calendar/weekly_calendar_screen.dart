@@ -5,7 +5,6 @@ import 'package:time_tracker/screens/weekly_calendar/cubit/weekly_calendar_cubit
 import 'package:time_tracker/screens/weekly_calendar/cubit/weekly_calendar_state.dart';
 import 'package:time_tracker/screens/weekly_calendar/widgets/weekly_calendar_entry_dialog.dart';
 import 'package:time_tracker/screens/weekly_calendar/widgets/weekly_calendar_header.dart';
-
 import 'package:time_tracker/widgets/visual_weekly_calendar.dart';
 
 class WeeklyCalendarScreen extends StatefulWidget {
@@ -21,7 +20,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = WeeklyCalendarCubit(AppDependencies.instance.timeDataProvider);
+    _cubit = WeeklyCalendarCubit(AppDependencies.instance.timeDataProvider, AppDependencies.instance.authDataProvider);
   }
 
   @override
@@ -67,6 +66,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                 child: VisualWeeklyCalendar(
                   weekStart: state.weekStart,
                   entries: weekEntries,
+                  getProjectById: _cubit.getProjectById,
                   onSlotTap:
                       (start, end, pos, clearSelection) => showWeeklyEntryDialog(
                         context: context,

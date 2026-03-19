@@ -3,6 +3,28 @@ part of 'auth_data_provider.dart';
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
 extension AuthProviderActions on AuthDataProvider {
+  String _mapAuthError(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'invalid-credential':
+      case 'wrong-password':
+      case 'user-not-found':
+      case 'invalid-email':
+        return 'Invalid email or password';
+      case 'user-disabled':
+        return 'This account has been disabled';
+      case 'too-many-requests':
+        return 'Too many attempts. Try again later';
+      case 'email-already-in-use':
+        return 'This email is already in use';
+      case 'weak-password':
+        return 'Password is too weak';
+      case 'operation-not-allowed':
+        return 'Email/password sign-in is not enabled';
+      default:
+        return e.message ?? 'Authentication failed';
+    }
+  }
+
   Future<void> refreshInvites() async {
     _isLoadingInvites = true;
     notifyListeners();
@@ -134,11 +156,19 @@ extension AuthProviderActions on AuthDataProvider {
     _error = null;
     _accessDenied = false;
     notifyListeners();
-
-    await _firebaseService.signInWithEmail(email, password);
-    _isLoading = false;
-    notifyListeners();
-    return true;
+    try {
+      await _firebaseService.signInWithEmail(email, password);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _error = _mapAuthError(e);
+      return false;
+    } catch (_) {
+      _error = 'Authentication failed';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<bool> signUp(String email, String password) async {
@@ -146,11 +176,19 @@ extension AuthProviderActions on AuthDataProvider {
     _error = null;
     _accessDenied = false;
     notifyListeners();
-
-    await _firebaseService.signUpWithEmail(email, password);
-    _isLoading = false;
-    notifyListeners();
-    return true;
+    try {
+      await _firebaseService.signUpWithEmail(email, password);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _error = _mapAuthError(e);
+      return false;
+    } catch (_) {
+      _error = 'Failed to create account';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> signOut() async {
@@ -167,11 +205,19 @@ extension AuthProviderActions on AuthDataProvider {
     _isLoading = true;
     _error = null;
     notifyListeners();
-
-    await _firebaseService.sendPasswordResetEmail(email);
-    _isLoading = false;
-    notifyListeners();
-    return true;
+    try {
+      await _firebaseService.sendPasswordResetEmail(email);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _error = _mapAuthError(e);
+      return false;
+    } catch (_) {
+      _error = 'Failed to send reset email';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   void clearError() {

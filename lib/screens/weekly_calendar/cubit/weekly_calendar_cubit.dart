@@ -1,17 +1,22 @@
 import 'package:time_tracker/cubit/base_cubit.dart';
+import 'package:time_tracker/data_providers/auth/auth_data_provider.dart';
 import 'package:time_tracker/data_providers/time/time_data_provider.dart';
+import 'package:time_tracker/models/org/team_member.dart';
 import 'package:time_tracker/models/projects/project.dart';
 import 'package:time_tracker/models/projects/tag.dart';
 import 'package:time_tracker/models/time/time_entry.dart';
+
 import 'weekly_calendar_state.dart';
 
 class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
-  WeeklyCalendarCubit(this._timeDataProvider) : super(WeeklyCalendarState.initial()) {
+  WeeklyCalendarCubit(this._timeDataProvider, this._authDataProvider) : super(WeeklyCalendarState.initial()) {
     _timeDataProvider.addListener(_syncFromProvider);
+    _authDataProvider.addListener(_syncFromProvider);
     _syncFromProvider();
   }
 
   final TimeDataProvider _timeDataProvider;
+  final AuthDataProvider _authDataProvider;
 
   void _syncFromProvider() {
     final weekStart = state.weekStart;
@@ -77,7 +82,15 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   }
 
   bool hasOverlap(TimeEntry candidate) {
-    for (final entry in _timeDataProvider.timeEntries) {
+    final visibleEntries = _timeDataProvider.timeEntries.where((entry) {
+      final currentUserId = _timeDataProvider.currentUserId;
+      if (_authDataProvider.hasManagerAccess) {
+        return true;
+      }
+      return entry.createdByUserId == currentUserId;
+    });
+
+    for (final entry in visibleEntries) {
       if (entry.id == candidate.id) continue;
       if (entry.date.year != candidate.date.year ||
           entry.date.month != candidate.date.month ||
@@ -100,7 +113,13 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
 
   TimeDataProvider get timeDataProvider => _timeDataProvider;
 
-  List<Project> get projects => _timeDataProvider.projects;
+  List<Project> get projects {
+    final TeamMember? currentMember = _timeDataProvider.getCurrentUserTeamMember();
+    return _timeDataProvider.getProjectsForUser(
+      hasManagerAccess: _authDataProvider.hasManagerAccess,
+      teamMemberId: currentMember?.id,
+    );
+  }
 
   List<Tag> get tags => _timeDataProvider.tags;
 
@@ -115,6 +134,7 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   @override
   void dispose() {
     _timeDataProvider.removeListener(_syncFromProvider);
+    _authDataProvider.removeListener(_syncFromProvider);
     super.dispose();
   }
 }
