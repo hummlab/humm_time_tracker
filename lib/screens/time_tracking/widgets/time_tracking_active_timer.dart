@@ -160,6 +160,31 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                     ],
                   ),
                 ],
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: widget.state.isStoppingTimer ? null : () => widget.cubit.stopTimer(),
+                      icon: const Icon(Icons.stop),
+                      label: Text(widget.state.isStoppingTimer ? 'Stopping...' : 'Stop & Save'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.successAccent,
+                        foregroundColor: AppTheme.primaryDark,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    OutlinedButton.icon(
+                      onPressed:
+                          widget.state.isStoppingTimer
+                              ? null
+                              : () {
+                                widget.cubit.cancelTimer();
+                              },
+                      icon: const Icon(Icons.close),
+                      label: const Text('Cancel'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

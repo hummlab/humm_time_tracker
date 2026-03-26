@@ -4,6 +4,7 @@ import 'package:time_tracker/models/projects/project.dart';
 import 'package:time_tracker/models/projects/tag.dart';
 import 'package:time_tracker/models/time/active_timer.dart';
 import 'package:time_tracker/models/time/time_entry.dart';
+import 'package:time_tracker/widgets/app_toast.dart';
 
 part 'time_tracking_state.freezed.dart';
 
@@ -20,6 +21,9 @@ class TimeTrackingState with _$TimeTrackingState {
     TeamMember? currentMember,
     required bool hasManagerAccess,
     required bool hasActiveTimer,
+    required bool isStoppingTimer,
+    String? toastMessage,
+    AppToastType? toastType,
     TimeEntry? editingEntry,
   }) = _TimeTrackingState;
 
@@ -36,6 +40,9 @@ class TimeTrackingState with _$TimeTrackingState {
       currentMember: null,
       hasManagerAccess: false,
       hasActiveTimer: false,
+      isStoppingTimer: false,
+      toastMessage: null,
+      toastType: null,
       editingEntry: null,
     );
   }

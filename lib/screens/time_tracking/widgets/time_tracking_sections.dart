@@ -143,24 +143,39 @@ extension _TimeTrackingScreenSections on _TimeTrackingScreenState {
         children: [
           Text('Week Summary', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildStatCard('Total', '${totalWeekHours.toStringAsFixed(1)}h', AppTheme.primaryAccent),
-              const SizedBox(width: 12),
-              _buildStatCard('Avg/Day', '${(averagePerDay / 60).toStringAsFixed(1)}h', AppTheme.warningAccent),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildStatCard('Entries', '${weekEntries.length}', AppTheme.successAccent),
-              const SizedBox(width: 12),
-              _buildStatCard(
-                'Projects',
-                '${weekEntries.map((e) => e.projectId).whereType<String>().toSet().length}',
-                AppTheme.tertiaryAccent,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const spacing = 12.0;
+              final stats = [
+                ('Total', '${totalWeekHours.toStringAsFixed(1)}h', AppTheme.primaryAccent),
+                ('Avg/Day', '${(averagePerDay / 60).toStringAsFixed(1)}h', AppTheme.warningAccent),
+                ('Entries', '${weekEntries.length}', AppTheme.successAccent),
+                (
+                  'Projects',
+                  '${weekEntries.map((e) => e.projectId).whereType<String>().toSet().length}',
+                  AppTheme.tertiaryAccent,
+                ),
+              ];
+
+              final maxWidth = constraints.maxWidth;
+              int columns = 2;
+              if (maxWidth >= 980) {
+                columns = 4;
+              } else if (maxWidth < 360) {
+                columns = 1;
+              }
+
+              final itemWidth = (maxWidth - (spacing * (columns - 1))) / columns;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children:
+                    stats
+                        .map((stat) => SizedBox(width: itemWidth, child: _buildStatCard(stat.$1, stat.$2, stat.$3)))
+                        .toList(),
+              );
+            },
           ),
         ],
       ),
@@ -169,6 +184,7 @@ extension _TimeTrackingScreenSections on _TimeTrackingScreenState {
 
   Widget _buildStatCard(String label, String value, Color color) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
       child: Column(

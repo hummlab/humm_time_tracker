@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import 'package:time_tracker/app_dependencies.dart';
 import 'package:time_tracker/cubit/cubit_builder.dart';
 import 'package:time_tracker/models/integrations/clickup_task.dart';
@@ -18,14 +16,15 @@ import 'package:time_tracker/theme/app_theme.dart';
 import 'package:time_tracker/widgets/app_toast.dart';
 import 'package:time_tracker/widgets/duration_chips.dart';
 import 'package:time_tracker/widgets/week_calendar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-part 'widgets/time_tracking_entry_form_widgets.dart';
-part 'widgets/time_tracking_project_picker.dart';
-part 'widgets/time_tracking_tags_picker.dart';
 part 'widgets/time_tracking_active_timer.dart';
-part 'widgets/time_tracking_entry_list_item.dart';
 part 'widgets/time_tracking_entry_form.dart';
+part 'widgets/time_tracking_entry_form_widgets.dart';
+part 'widgets/time_tracking_entry_list_item.dart';
+part 'widgets/time_tracking_project_picker.dart';
 part 'widgets/time_tracking_sections.dart';
+part 'widgets/time_tracking_tags_picker.dart';
 
 class TimeTrackingScreen extends StatefulWidget {
   const TimeTrackingScreen({super.key});
@@ -37,6 +36,7 @@ class TimeTrackingScreen extends StatefulWidget {
 class _TimeTrackingScreenState extends State<TimeTrackingScreen> {
   late final TimeTrackingCubit _cubit;
   final GlobalKey<TimeEntryFormState> _timeEntryFormKey = GlobalKey<TimeEntryFormState>();
+  String? _lastToastMessage;
 
   void _startEditing(TimeEntry entry) {
     _cubit.startEditing(entry);
@@ -63,12 +63,24 @@ class _TimeTrackingScreenState extends State<TimeTrackingScreen> {
     return CubitBuilder<TimeTrackingCubit, TimeTrackingState>(
       cubit: _cubit,
       builder: (context, state) {
+        _handleToast(state);
         final size = MediaQuery.of(context).size;
         final isDesktop = size.width > 800;
 
         return isDesktop ? _buildDesktopLayout(state) : _buildMobileLayout(state);
       },
     );
+  }
+
+  void _handleToast(TimeTrackingState state) {
+    final message = state.toastMessage;
+    if (message == null || message == _lastToastMessage) return;
+
+    _lastToastMessage = message;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppToast.show(context, message, type: state.toastType ?? AppToastType.info);
+    });
+    _cubit.clearToast();
   }
 
   Widget _buildDesktopLayout(TimeTrackingState state) {

@@ -7,6 +7,8 @@ import 'package:time_tracker/models/org/team_member.dart';
 import 'package:time_tracker/models/projects/project.dart';
 import 'package:time_tracker/models/projects/tag.dart';
 import 'package:time_tracker/models/time/time_entry.dart';
+import 'package:time_tracker/widgets/app_toast.dart';
+
 import 'time_tracking_state.dart';
 
 class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
@@ -95,11 +97,31 @@ class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
   }
 
   Future<void> stopTimer() async {
-    await _timeDataProvider.stopTimer();
+    if (state.isStoppingTimer) return;
+
+    emit(state.copyWith(isStoppingTimer: true));
+    try {
+      await _timeDataProvider.stopTimer();
+      emit(
+        state.copyWith(
+          isStoppingTimer: false,
+          toastMessage: 'Timer stopped and entry saved',
+          toastType: AppToastType.success,
+        ),
+      );
+    } catch (_) {
+      emit(state.copyWith(isStoppingTimer: false, toastMessage: 'Failed to stop timer', toastType: AppToastType.error));
+    }
   }
 
   void cancelTimer() {
     _timeDataProvider.cancelTimer();
+    emit(state.copyWith(toastMessage: 'Timer canceled', toastType: AppToastType.info));
+  }
+
+  void clearToast() {
+    if (state.toastMessage == null && state.toastType == null) return;
+    emit(state.copyWith(toastMessage: null, toastType: null));
   }
 
   Future<void> addTimeEntry(

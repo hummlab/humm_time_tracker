@@ -27,6 +27,9 @@ mixin _$TimeTrackingState {
   TeamMember? get currentMember => throw _privateConstructorUsedError;
   bool get hasManagerAccess => throw _privateConstructorUsedError;
   bool get hasActiveTimer => throw _privateConstructorUsedError;
+  bool get isStoppingTimer => throw _privateConstructorUsedError;
+  String? get toastMessage => throw _privateConstructorUsedError;
+  AppToastType? get toastType => throw _privateConstructorUsedError;
   TimeEntry? get editingEntry => throw _privateConstructorUsedError;
 
   /// Create a copy of TimeTrackingState
@@ -51,6 +54,9 @@ abstract class $TimeTrackingStateCopyWith<$Res> {
     TeamMember? currentMember,
     bool hasManagerAccess,
     bool hasActiveTimer,
+    bool isStoppingTimer,
+    String? toastMessage,
+    AppToastType? toastType,
     TimeEntry? editingEntry,
   });
 
@@ -84,6 +90,9 @@ class _$TimeTrackingStateCopyWithImpl<$Res, $Val extends TimeTrackingState>
     Object? currentMember = freezed,
     Object? hasManagerAccess = null,
     Object? hasActiveTimer = null,
+    Object? isStoppingTimer = null,
+    Object? toastMessage = freezed,
+    Object? toastType = freezed,
     Object? editingEntry = freezed,
   }) {
     return _then(
@@ -138,6 +147,21 @@ class _$TimeTrackingStateCopyWithImpl<$Res, $Val extends TimeTrackingState>
                     ? _value.hasActiveTimer
                     : hasActiveTimer // ignore: cast_nullable_to_non_nullable
                         as bool,
+            isStoppingTimer:
+                null == isStoppingTimer
+                    ? _value.isStoppingTimer
+                    : isStoppingTimer // ignore: cast_nullable_to_non_nullable
+                        as bool,
+            toastMessage:
+                freezed == toastMessage
+                    ? _value.toastMessage
+                    : toastMessage // ignore: cast_nullable_to_non_nullable
+                        as String?,
+            toastType:
+                freezed == toastType
+                    ? _value.toastType
+                    : toastType // ignore: cast_nullable_to_non_nullable
+                        as AppToastType?,
             editingEntry:
                 freezed == editingEntry
                     ? _value.editingEntry
@@ -208,6 +232,9 @@ abstract class _$$TimeTrackingStateImplCopyWith<$Res> implements $TimeTrackingSt
     TeamMember? currentMember,
     bool hasManagerAccess,
     bool hasActiveTimer,
+    bool isStoppingTimer,
+    String? toastMessage,
+    AppToastType? toastType,
     TimeEntry? editingEntry,
   });
 
@@ -240,6 +267,9 @@ class __$$TimeTrackingStateImplCopyWithImpl<$Res> extends _$TimeTrackingStateCop
     Object? currentMember = freezed,
     Object? hasManagerAccess = null,
     Object? hasActiveTimer = null,
+    Object? isStoppingTimer = null,
+    Object? toastMessage = freezed,
+    Object? toastType = freezed,
     Object? editingEntry = freezed,
   }) {
     return _then(
@@ -294,6 +324,21 @@ class __$$TimeTrackingStateImplCopyWithImpl<$Res> extends _$TimeTrackingStateCop
                 ? _value.hasActiveTimer
                 : hasActiveTimer // ignore: cast_nullable_to_non_nullable
                     as bool,
+        isStoppingTimer:
+            null == isStoppingTimer
+                ? _value.isStoppingTimer
+                : isStoppingTimer // ignore: cast_nullable_to_non_nullable
+                    as bool,
+        toastMessage:
+            freezed == toastMessage
+                ? _value.toastMessage
+                : toastMessage // ignore: cast_nullable_to_non_nullable
+                    as String?,
+        toastType:
+            freezed == toastType
+                ? _value.toastType
+                : toastType // ignore: cast_nullable_to_non_nullable
+                    as AppToastType?,
         editingEntry:
             freezed == editingEntry
                 ? _value.editingEntry
@@ -318,6 +363,9 @@ class _$TimeTrackingStateImpl implements _TimeTrackingState {
     this.currentMember,
     required this.hasManagerAccess,
     required this.hasActiveTimer,
+    required this.isStoppingTimer,
+    this.toastMessage,
+    this.toastType,
     this.editingEntry,
   }) : _entriesForDate = entriesForDate,
        _weekEntries = weekEntries,
@@ -369,11 +417,17 @@ class _$TimeTrackingStateImpl implements _TimeTrackingState {
   @override
   final bool hasActiveTimer;
   @override
+  final bool isStoppingTimer;
+  @override
+  final String? toastMessage;
+  @override
+  final AppToastType? toastType;
+  @override
   final TimeEntry? editingEntry;
 
   @override
   String toString() {
-    return 'TimeTrackingState(selectedDate: $selectedDate, entriesForDate: $entriesForDate, weekEntries: $weekEntries, projects: $projects, tags: $tags, activeTimer: $activeTimer, currentUserId: $currentUserId, currentMember: $currentMember, hasManagerAccess: $hasManagerAccess, hasActiveTimer: $hasActiveTimer, editingEntry: $editingEntry)';
+    return 'TimeTrackingState(selectedDate: $selectedDate, entriesForDate: $entriesForDate, weekEntries: $weekEntries, projects: $projects, tags: $tags, activeTimer: $activeTimer, currentUserId: $currentUserId, currentMember: $currentMember, hasManagerAccess: $hasManagerAccess, hasActiveTimer: $hasActiveTimer, isStoppingTimer: $isStoppingTimer, toastMessage: $toastMessage, toastType: $toastType, editingEntry: $editingEntry)';
   }
 
   @override
@@ -391,6 +445,9 @@ class _$TimeTrackingStateImpl implements _TimeTrackingState {
             (identical(other.currentMember, currentMember) || other.currentMember == currentMember) &&
             (identical(other.hasManagerAccess, hasManagerAccess) || other.hasManagerAccess == hasManagerAccess) &&
             (identical(other.hasActiveTimer, hasActiveTimer) || other.hasActiveTimer == hasActiveTimer) &&
+            (identical(other.isStoppingTimer, isStoppingTimer) || other.isStoppingTimer == isStoppingTimer) &&
+            (identical(other.toastMessage, toastMessage) || other.toastMessage == toastMessage) &&
+            (identical(other.toastType, toastType) || other.toastType == toastType) &&
             (identical(other.editingEntry, editingEntry) || other.editingEntry == editingEntry));
   }
 
@@ -407,6 +464,9 @@ class _$TimeTrackingStateImpl implements _TimeTrackingState {
     currentMember,
     hasManagerAccess,
     hasActiveTimer,
+    isStoppingTimer,
+    toastMessage,
+    toastType,
     editingEntry,
   );
 
@@ -431,6 +491,9 @@ abstract class _TimeTrackingState implements TimeTrackingState {
     final TeamMember? currentMember,
     required final bool hasManagerAccess,
     required final bool hasActiveTimer,
+    required final bool isStoppingTimer,
+    final String? toastMessage,
+    final AppToastType? toastType,
     final TimeEntry? editingEntry,
   }) = _$TimeTrackingStateImpl;
 
@@ -454,6 +517,12 @@ abstract class _TimeTrackingState implements TimeTrackingState {
   bool get hasManagerAccess;
   @override
   bool get hasActiveTimer;
+  @override
+  bool get isStoppingTimer;
+  @override
+  String? get toastMessage;
+  @override
+  AppToastType? get toastType;
   @override
   TimeEntry? get editingEntry;
 
