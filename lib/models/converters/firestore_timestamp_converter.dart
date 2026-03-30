@@ -9,12 +9,12 @@ class FirestoreDateTimeConverter implements JsonConverter<DateTime, Object?> {
     if (json == null) {
       return DateTime.now();
     }
-    if (json is DateTime) return json;
-    if (json is Timestamp) return json.toDate();
+    if (json is DateTime) return json.isUtc ? json.toLocal() : json;
+    if (json is Timestamp) return json.toDate().toLocal();
     if (json is int) return DateTime.fromMillisecondsSinceEpoch(json);
     if (json is String) {
       final parsed = DateTime.tryParse(json);
-      if (parsed != null) return parsed;
+      if (parsed != null) return parsed.isUtc ? parsed.toLocal() : parsed;
     }
     return DateTime.now();
   }
@@ -29,10 +29,14 @@ class FirestoreNullableDateTimeConverter implements JsonConverter<DateTime?, Obj
   @override
   DateTime? fromJson(Object? json) {
     if (json == null) return null;
-    if (json is DateTime) return json;
-    if (json is Timestamp) return json.toDate();
+    if (json is DateTime) return json.isUtc ? json.toLocal() : json;
+    if (json is Timestamp) return json.toDate().toLocal();
     if (json is int) return DateTime.fromMillisecondsSinceEpoch(json);
-    if (json is String) return DateTime.tryParse(json);
+    if (json is String) {
+      final parsed = DateTime.tryParse(json);
+      if (parsed == null) return null;
+      return parsed.isUtc ? parsed.toLocal() : parsed;
+    }
     return null;
   }
 

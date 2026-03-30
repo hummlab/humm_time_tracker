@@ -36,7 +36,13 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
       body: CubitBuilder<WeeklyCalendarCubit, WeeklyCalendarState>(
         cubit: _cubit,
         builder: (context, state) {
-          final weekEnd = state.weekStart.add(const Duration(days: 7));
+          final normalizedWeekStart = DateTime(
+            state.weekStart.year,
+            state.weekStart.month,
+            state.weekStart.day,
+          ).subtract(Duration(days: state.weekStart.weekday - 1));
+          final weekStart = DateTime(normalizedWeekStart.year, normalizedWeekStart.month, normalizedWeekStart.day);
+          final weekEnd = weekStart.add(const Duration(days: 7));
           final currentUserId = state.currentUserId;
 
           final weekEntries =
@@ -44,7 +50,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                   .where(
                     (e) =>
                         e.createdByUserId == currentUserId &&
-                        e.date.isAfter(state.weekStart.subtract(const Duration(days: 1))) &&
+                        e.date.isAfter(weekStart.subtract(const Duration(days: 1))) &&
                         e.date.isBefore(weekEnd),
                   )
                   .toList();
@@ -56,7 +62,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
           return Column(
             children: [
               WeeklyCalendarHeader(
-                weekStart: state.weekStart,
+                weekStart: weekStart,
                 onPreviousWeek: _cubit.previousWeek,
                 onNextWeek: _cubit.nextWeek,
                 weekHours: weekHours,
@@ -64,7 +70,7 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
               ),
               Expanded(
                 child: VisualWeeklyCalendar(
-                  weekStart: state.weekStart,
+                  weekStart: weekStart,
                   entries: weekEntries,
                   getProjectById: _cubit.getProjectById,
                   onSlotTap:

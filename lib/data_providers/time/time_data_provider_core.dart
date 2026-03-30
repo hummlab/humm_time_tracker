@@ -92,13 +92,14 @@ extension DataProviderCore on TimeDataProvider {
     _activeTimer = null;
     _lastUsedDurations = [];
     _lastUsedDescriptions = [];
-    _selectedDate = DateTime.now();
+    final now = DateTime.now();
+    _selectedDate = DateTime(now.year, now.month, now.day);
     notifyListeners();
     _clearActiveTimerFromStorage();
   }
 
   void setSelectedDate(DateTime date) {
-    _selectedDate = date;
+    _selectedDate = DateTime(date.year, date.month, date.day);
     notifyListeners();
   }
 

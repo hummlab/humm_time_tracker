@@ -39,7 +39,7 @@ class TimeDataProvider extends ChangeNotifier {
   WorkspaceRepository? _workspaceRepository;
   VoidCallback? _workspaceRepositoryListener;
 
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   List<int> _lastUsedDurations = [];
   List<String> _lastUsedDescriptions = [];
 
@@ -151,11 +151,13 @@ class TimeDataProvider extends ChangeNotifier {
     final userId = currentUserId;
     if (repository == null || userId == null) return;
 
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+
     final entry = TimeEntry(
       id: '',
       description: description,
       durationMinutes: durationMinutes,
-      date: date,
+      date: normalizedDate,
       projectId: projectId,
       tagIds: tagIds ?? const [],
       createdByUserId: userId,
@@ -171,7 +173,8 @@ class TimeDataProvider extends ChangeNotifier {
   Future<void> updateTimeEntry(TimeEntry entry) async {
     final repository = _timeEntriesRepository;
     if (repository == null) return;
-    await repository.updateTimeEntry(entry);
+    final normalizedDate = DateTime(entry.date.year, entry.date.month, entry.date.day);
+    await repository.updateTimeEntry(entry.copyWith(date: normalizedDate));
   }
 
   Future<void> deleteTimeEntry(String id) async {

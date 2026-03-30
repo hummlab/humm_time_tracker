@@ -20,8 +20,17 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   final TimeDataProvider _timeDataProvider;
   final AuthDataProvider _authDataProvider;
 
+  DateTime _normalizeWeekStart(DateTime date) {
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    final monday = normalizedDate.subtract(Duration(days: normalizedDate.weekday - 1));
+    return DateTime(monday.year, monday.month, monday.day);
+  }
+
   void _syncFromProvider() {
-    final weekStart = state.weekStart;
+    final weekStart = _normalizeWeekStart(state.weekStart);
+    if (weekStart != state.weekStart) {
+      emit(state.copyWith(weekStart: weekStart));
+    }
     final weekEnd = weekStart.add(const Duration(days: 7));
     final currentUserId = _timeDataProvider.currentUserId;
 
@@ -41,19 +50,19 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   }
 
   void previousWeek() {
-    final newStart = state.weekStart.subtract(const Duration(days: 7));
+    final newStart = _normalizeWeekStart(state.weekStart.subtract(const Duration(days: 7)));
     emit(state.copyWith(weekStart: newStart));
     _syncFromProvider();
   }
 
   void nextWeek() {
-    final newStart = state.weekStart.add(const Duration(days: 7));
+    final newStart = _normalizeWeekStart(state.weekStart.add(const Duration(days: 7)));
     emit(state.copyWith(weekStart: newStart));
     _syncFromProvider();
   }
 
   void setWeekStart(DateTime weekStart) {
-    emit(state.copyWith(weekStart: weekStart));
+    emit(state.copyWith(weekStart: _normalizeWeekStart(weekStart)));
     _syncFromProvider();
   }
 
