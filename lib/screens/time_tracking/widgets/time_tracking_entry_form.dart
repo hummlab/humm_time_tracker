@@ -3,10 +3,18 @@ part of 'package:time_tracker/screens/time_tracking/time_tracking_screen.dart';
 class TimeEntryForm extends StatefulWidget {
   final TimeTrackingCubit cubit;
   final TimeEntry? editingEntry;
+  final String? initialDescription;
   final VoidCallback? onCancelEdit;
   final VoidCallback? onSaved;
 
-  const TimeEntryForm({super.key, required this.cubit, this.editingEntry, this.onCancelEdit, this.onSaved});
+  const TimeEntryForm({
+    super.key,
+    required this.cubit,
+    this.editingEntry,
+    this.initialDescription,
+    this.onCancelEdit,
+    this.onSaved,
+  });
 
   @override
   State<TimeEntryForm> createState() => TimeEntryFormState();
@@ -57,8 +65,13 @@ class TimeEntryFormState extends State<TimeEntryForm> {
       _selectedProjectId = widget.editingEntry!.projectId;
       _selectedTagIds = List.from(widget.editingEntry!.tagIds);
       _selectedStartTime =
-          widget.editingEntry!.startTime != null ? TimeOfDay.fromDateTime(widget.editingEntry!.startTime!) : null;
-      _startTimeController.text = _selectedStartTime != null ? _formatTimeOfDay(_selectedStartTime!) : '';
+          widget.editingEntry!.startTime != null
+              ? TimeOfDay.fromDateTime(widget.editingEntry!.startTime!)
+              : null;
+      _startTimeController.text =
+          _selectedStartTime != null
+              ? _formatTimeOfDay(_selectedStartTime!)
+              : '';
     } else {
       _clearForm();
     }
@@ -66,7 +79,7 @@ class TimeEntryFormState extends State<TimeEntryForm> {
   }
 
   void _clearForm() {
-    _descriptionController.clear();
+    _descriptionController.text = widget.initialDescription?.trim() ?? '';
     _startTimeController.clear();
     _selectedDuration = null;
     _selectedProjectId = null;
@@ -110,10 +123,12 @@ class TimeEntryFormState extends State<TimeEntryForm> {
     final query = _descriptionController.text;
 
     // Clear selected task if description changed manually
-    if (_selectedClickUpTask != null && query != _selectedClickUpTask!.displayName) {
+    if (_selectedClickUpTask != null &&
+        query != _selectedClickUpTask!.displayName) {
       _selectedClickUpTask = null;
     }
-    if (_selectedJiraIssue != null && query != _selectedJiraIssue!.displayName) {
+    if (_selectedJiraIssue != null &&
+        query != _selectedJiraIssue!.displayName) {
       _selectedJiraIssue = null;
     }
 
@@ -157,7 +172,13 @@ class TimeEntryFormState extends State<TimeEntryForm> {
       // Filter tasks to only those from accessible lists
       if (accessibleListIds.isNotEmpty) {
         clickUpResults =
-            clickUpResults.where((task) => task.listId != null && accessibleListIds.contains(task.listId)).toList();
+            clickUpResults
+                .where(
+                  (task) =>
+                      task.listId != null &&
+                      accessibleListIds.contains(task.listId),
+                )
+                .toList();
       } else {
         // User has no projects with ClickUp lists assigned - show nothing
         clickUpResults = [];
@@ -173,7 +194,8 @@ class TimeEntryFormState extends State<TimeEntryForm> {
         _clickUpSuggestions = clickUpResults;
         _jiraSuggestions = jiraResults;
       });
-      if ((clickUpResults.isNotEmpty || jiraResults.isNotEmpty) && _descriptionFocusNode.hasFocus) {
+      if ((clickUpResults.isNotEmpty || jiraResults.isNotEmpty) &&
+          _descriptionFocusNode.hasFocus) {
         _showSuggestions();
       } else {
         _hideSuggestions();
@@ -192,7 +214,10 @@ class TimeEntryFormState extends State<TimeEntryForm> {
               link: _layerLink,
               showWhenUnlinked: false,
               offset: const Offset(0, 60),
-              child: Material(color: Colors.transparent, child: _buildSuggestionsDropdown()),
+              child: Material(
+                color: Colors.transparent,
+                child: _buildSuggestionsDropdown(),
+              ),
             ),
           ),
     );
@@ -215,8 +240,16 @@ class TimeEntryFormState extends State<TimeEntryForm> {
       decoration: BoxDecoration(
         color: AppTheme.cardDark,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primaryAccent.withValues(alpha: 0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 20, offset: const Offset(0, 10))],
+        border: Border.all(
+          color: AppTheme.primaryAccent.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -295,9 +328,19 @@ class TimeEntryFormState extends State<TimeEntryForm> {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
           const Spacer(),
-          Text('$count found', style: TextStyle(fontSize: 10, color: AppTheme.textMuted)),
+          Text(
+            '$count found',
+            style: TextStyle(fontSize: 10, color: AppTheme.textMuted),
+          ),
         ],
       ),
     );
@@ -313,7 +356,14 @@ class TimeEntryFormState extends State<TimeEntryForm> {
         child: Row(
           children: [
             // Status indicator
-            Container(width: 10, height: 10, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: statusColor,
+                shape: BoxShape.circle,
+              ),
+            ),
             const SizedBox(width: 10),
             // Task info
             Expanded(
@@ -324,9 +374,14 @@ class TimeEntryFormState extends State<TimeEntryForm> {
                     children: [
                       if (task.customId != null) ...[
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryAccent.withValues(alpha: 0.15),
+                            color: AppTheme.primaryAccent.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -360,25 +415,40 @@ class TimeEntryFormState extends State<TimeEntryForm> {
                     children: [
                       // Status badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           task.status,
-                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: statusColor),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: statusColor,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       // List name
-                      if (task.listName != null && task.listName!.isNotEmpty) ...[
-                        Icon(Icons.folder_outlined, size: 10, color: AppTheme.textMuted),
+                      if (task.listName != null &&
+                          task.listName!.isNotEmpty) ...[
+                        Icon(
+                          Icons.folder_outlined,
+                          size: 10,
+                          color: AppTheme.textMuted,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             task.listName!,
-                            style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppTheme.textMuted,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -390,7 +460,11 @@ class TimeEntryFormState extends State<TimeEntryForm> {
               ),
             ),
             // Arrow
-            const Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.textMuted),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 12,
+              color: AppTheme.textMuted,
+            ),
           ],
         ),
       ),
@@ -434,7 +508,14 @@ class TimeEntryFormState extends State<TimeEntryForm> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Row(
           children: [
-            Container(width: 10, height: 10, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: statusColor,
+                shape: BoxShape.circle,
+              ),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -443,9 +524,14 @@ class TimeEntryFormState extends State<TimeEntryForm> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppTheme.secondaryAccent.withValues(alpha: 0.15),
+                          color: AppTheme.secondaryAccent.withValues(
+                            alpha: 0.15,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -477,23 +563,37 @@ class TimeEntryFormState extends State<TimeEntryForm> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           issue.status.name,
-                          style: TextStyle(fontSize: 9, fontWeight: FontWeight.w500, color: statusColor),
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                            color: statusColor,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Icon(Icons.folder_outlined, size: 10, color: AppTheme.textMuted),
+                      Icon(
+                        Icons.folder_outlined,
+                        size: 10,
+                        color: AppTheme.textMuted,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           issue.project.name,
-                          style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppTheme.textMuted,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -503,7 +603,11 @@ class TimeEntryFormState extends State<TimeEntryForm> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.textMuted),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 12,
+              color: AppTheme.textMuted,
+            ),
           ],
         ),
       ),
@@ -534,7 +638,13 @@ class TimeEntryFormState extends State<TimeEntryForm> {
 
   DateTime? _composeStartDateTime(DateTime baseDate) {
     if (_selectedStartTime == null) return null;
-    return DateTime(baseDate.year, baseDate.month, baseDate.day, _selectedStartTime!.hour, _selectedStartTime!.minute);
+    return DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day,
+      _selectedStartTime!.hour,
+      _selectedStartTime!.minute,
+    );
   }
 
   Future<void> _pickStartTime() async {
@@ -543,7 +653,10 @@ class TimeEntryFormState extends State<TimeEntryForm> {
       initialTime: _selectedStartTime ?? TimeOfDay.now(),
       builder: (context, child) {
         if (child == null) return const SizedBox.shrink();
-        return MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child);
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child,
+        );
       },
     );
     if (picked == null) return;
@@ -564,8 +677,12 @@ class TimeEntryFormState extends State<TimeEntryForm> {
     // Validate fields and set inline errors
     bool hasError = false;
     setState(() {
-      _descriptionError = _descriptionController.text.isEmpty ? 'Please enter a description' : null;
-      _durationError = _selectedDuration == null ? 'Please select duration' : null;
+      _descriptionError =
+          _descriptionController.text.isEmpty
+              ? 'Please enter a description'
+              : null;
+      _durationError =
+          _selectedDuration == null ? 'Please select duration' : null;
       hasError = _descriptionError != null || _durationError != null;
     });
 
@@ -585,7 +702,11 @@ class TimeEntryFormState extends State<TimeEntryForm> {
           startTime: startTime,
         ),
       );
-      AppToast.show(context, 'Time entry updated successfully', type: AppToastType.success);
+      AppToast.show(
+        context,
+        'Time entry updated successfully',
+        type: AppToastType.success,
+      );
     } else {
       final startTime = _composeStartDateTime(widget.cubit.selectedDate);
       widget.cubit.addTimeEntry(
@@ -598,7 +719,11 @@ class TimeEntryFormState extends State<TimeEntryForm> {
         jiraIssueKey: _selectedJiraIssue?.key,
         startTime: startTime,
       );
-      AppToast.show(context, 'Time entry added successfully', type: AppToastType.success);
+      AppToast.show(
+        context,
+        'Time entry added successfully',
+        type: AppToastType.success,
+      );
     }
 
     _clearForm();
@@ -621,7 +746,11 @@ class TimeEntryFormState extends State<TimeEntryForm> {
 
   void _startTimer() {
     if (_descriptionController.text.isEmpty) {
-      AppToast.show(context, 'Please enter a description before starting the timer', type: AppToastType.error);
+      AppToast.show(
+        context,
+        'Please enter a description before starting the timer',
+        type: AppToastType.error,
+      );
       return;
     }
 

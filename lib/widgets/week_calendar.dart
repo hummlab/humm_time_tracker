@@ -22,11 +22,14 @@ class WeekCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final days = List.generate(7, (index) => _weekStart.add(Duration(days: index)));
+    final days = List.generate(
+      7,
+      (index) => _weekStart.add(Duration(days: index)),
+    );
     final today = DateTime.now();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: BoxDecoration(
         color: AppTheme.cardDark,
         borderRadius: BorderRadius.circular(16),
@@ -35,31 +38,48 @@ class WeekCalendar extends StatelessWidget {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
-                onPressed: () => onDateSelected(selectedDate.subtract(const Duration(days: 7))),
+                onPressed:
+                    () => onDateSelected(
+                      selectedDate.subtract(const Duration(days: 7)),
+                    ),
                 color: AppTheme.textSecondary,
               ),
-              Text(
-                '${DateFormat('MMM d').format(_weekStart)} - ${DateFormat('MMM d, yyyy').format(_weekStart.add(const Duration(days: 6)))}',
-                style: Theme.of(context).textTheme.titleMedium,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${DateFormat('MMM d').format(_weekStart)} - ${DateFormat('MMM d, yyyy').format(_weekStart.add(const Duration(days: 6)))}',
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 1,
+                  ),
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
-                onPressed: () => onDateSelected(selectedDate.add(const Duration(days: 7))),
+                onPressed:
+                    () => onDateSelected(
+                      selectedDate.add(const Duration(days: 7)),
+                    ),
                 color: AppTheme.textSecondary,
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children:
                 days.map((day) {
                   final isSelected =
-                      day.year == selectedDate.year && day.month == selectedDate.month && day.day == selectedDate.day;
-                  final isToday = day.year == today.year && day.month == today.month && day.day == today.day;
+                      day.year == selectedDate.year &&
+                      day.month == selectedDate.month &&
+                      day.day == selectedDate.day;
+                  final isToday =
+                      day.year == today.year &&
+                      day.month == today.month &&
+                      day.day == today.day;
                   final dateKey = DateTime(day.year, day.month, day.day);
                   final minutes = minutesByDate[dateKey] ?? 0;
                   final hasEntries = minutes > 0;
@@ -69,14 +89,18 @@ class WeekCalendar extends StatelessWidget {
                       onTap: () => onDateSelected(day),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
                           color:
                               isSelected
-                                  ? AppTheme.primaryAccent.withValues(alpha: 0.2)
+                                  ? AppTheme.primaryAccent.withValues(
+                                    alpha: 0.2,
+                                  )
                                   : isToday
-                                  ? AppTheme.secondaryAccent.withValues(alpha: 0.1)
+                                  ? AppTheme.secondaryAccent.withValues(
+                                    alpha: 0.1,
+                                  )
                                   : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
@@ -84,7 +108,9 @@ class WeekCalendar extends StatelessWidget {
                                 isSelected
                                     ? AppTheme.primaryAccent
                                     : isToday
-                                    ? AppTheme.secondaryAccent.withValues(alpha: 0.5)
+                                    ? AppTheme.secondaryAccent.withValues(
+                                      alpha: 0.5,
+                                    )
                                     : Colors.transparent,
                             width: isSelected ? 2 : 1,
                           ),
@@ -94,17 +120,23 @@ class WeekCalendar extends StatelessWidget {
                             Text(
                               DateFormat('E').format(day).substring(0, 2),
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w500,
-                                color: isSelected ? AppTheme.primaryAccent : AppTheme.textMuted,
+                                color:
+                                    isSelected
+                                        ? AppTheme.primaryAccent
+                                        : AppTheme.textMuted,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 2),
                             Text(
                               '${day.day}',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: isSelected || isToday ? FontWeight.w700 : FontWeight.w500,
+                                fontSize: 14,
+                                fontWeight:
+                                    isSelected || isToday
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
                                 color:
                                     isSelected
                                         ? AppTheme.primaryAccent
@@ -113,18 +145,23 @@ class WeekCalendar extends StatelessWidget {
                                         : AppTheme.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 4),
                             if (hasEntries)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 1.5,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.successAccent.withValues(alpha: 0.2),
+                                  color: AppTheme.successAccent.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
                                   _formatMinutes(minutes),
                                   style: const TextStyle(
-                                    fontSize: 9,
+                                    fontSize: 8.5,
                                     fontWeight: FontWeight.w600,
                                     color: AppTheme.successAccent,
                                   ),
@@ -134,7 +171,10 @@ class WeekCalendar extends StatelessWidget {
                               Container(
                                 width: 6,
                                 height: 6,
-                                decoration: BoxDecoration(color: AppTheme.borderDark, shape: BoxShape.circle),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.borderDark,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
                           ],
                         ),

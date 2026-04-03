@@ -21,7 +21,8 @@ class MobileMultiSelectPicker extends StatefulWidget {
   final bool compactItems;
 
   @override
-  State<MobileMultiSelectPicker> createState() => _MobileMultiSelectPickerState();
+  State<MobileMultiSelectPicker> createState() =>
+      _MobileMultiSelectPickerState();
 }
 
 class _MobileMultiSelectPickerState extends State<MobileMultiSelectPicker> {
@@ -67,18 +68,28 @@ class _MobileMultiSelectPickerState extends State<MobileMultiSelectPicker> {
             children: [
               Icon(widget.icon, size: 20, color: AppTheme.primaryAccent),
               const SizedBox(width: 8),
-              Text(widget.title, style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                widget.title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               if (_selectedIds.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.primaryAccent.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${_selectedIds.length}',
-                    style: const TextStyle(color: AppTheme.primaryAccent, fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: AppTheme.primaryAccent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -90,7 +101,10 @@ class _MobileMultiSelectPickerState extends State<MobileMultiSelectPicker> {
                   },
                   child: const Text('Clear'),
                 ),
-              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -110,14 +124,23 @@ class _MobileMultiSelectPickerState extends State<MobileMultiSelectPicker> {
               children:
                   filteredItems.map((item) {
                     final isSelected = _selectedIds.contains(item.id);
-                    final itemColor = item.color != null ? AppTheme.colorFromHex(item.color!) : AppTheme.primaryAccent;
+                    final itemColor =
+                        item.color != null
+                            ? AppTheme.colorFromHex(item.color!)
+                            : AppTheme.primaryAccent;
 
                     return CheckboxListTile(
                       value: isSelected,
                       onChanged: (_) => _toggleItem(item.id),
                       dense: widget.compactItems,
-                      visualDensity: widget.compactItems ? const VisualDensity(horizontal: 0, vertical: -3) : null,
-                      contentPadding: widget.compactItems ? const EdgeInsets.symmetric(horizontal: 4) : null,
+                      visualDensity:
+                          widget.compactItems
+                              ? const VisualDensity(horizontal: 0, vertical: -3)
+                              : null,
+                      contentPadding:
+                          widget.compactItems
+                              ? const EdgeInsets.symmetric(horizontal: 4)
+                              : null,
                       secondary:
                           item.color != null
                               ? Container(
@@ -128,8 +151,17 @@ class _MobileMultiSelectPickerState extends State<MobileMultiSelectPicker> {
                                   shape: BoxShape.circle,
                                 ),
                               )
-                              : Icon(widget.icon, size: widget.compactItems ? 18 : 20, color: AppTheme.textMuted),
-                      title: Text(item.name, style: TextStyle(fontSize: widget.compactItems ? 13 : 15)),
+                              : Icon(
+                                widget.icon,
+                                size: widget.compactItems ? 18 : 20,
+                                color: AppTheme.textMuted,
+                              ),
+                      title: Text(
+                        item.name,
+                        style: TextStyle(
+                          fontSize: widget.compactItems ? 13 : 15,
+                        ),
+                      ),
                       activeColor: itemColor,
                       checkColor: Colors.white,
                     );

@@ -28,7 +28,9 @@ part 'time_data_provider_timer.dart';
 
 class TimeDataProvider extends ChangeNotifier {
   final FirebaseDataProvider _firebaseService = FirebaseDataProvider();
-  final ClickUpRepository _clickUpRepository = ClickUpRepository(ClickUpDataProvider());
+  final ClickUpRepository _clickUpRepository = ClickUpRepository(
+    ClickUpDataProvider(),
+  );
   final JiraRepository _jiraRepository = JiraRepository(JiraDataProvider());
 
   ClientsRepository? _clientsRepository;
@@ -39,7 +41,13 @@ class TimeDataProvider extends ChangeNotifier {
   WorkspaceRepository? _workspaceRepository;
   VoidCallback? _workspaceRepositoryListener;
 
-  DateTime _selectedDate = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime _selectedDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+  DateTime? _entriesWindowStart;
+  DateTime? _entriesWindowEnd;
   List<int> _lastUsedDurations = [];
   List<String> _lastUsedDescriptions = [];
 
@@ -67,7 +75,8 @@ class TimeDataProvider extends ChangeNotifier {
 
   List<Project> get projects => _workspaceRepository?.projects ?? const [];
   List<Tag> get tags => _workspaceRepository?.tags ?? const [];
-  List<TimeEntry> get timeEntries => _workspaceRepository?.timeEntries ?? const [];
+  List<TimeEntry> get timeEntries =>
+      _workspaceRepository?.timeEntries ?? const [];
 
   // ClickUp getters
   List<ClickUpTask> get clickUpTasks => _clickUpTasks;
@@ -132,8 +141,14 @@ class TimeDataProvider extends ChangeNotifier {
     return _workspaceRepository?.getCurrentUserTeamMember(currentUserId);
   }
 
-  List<Project> getProjectsForUser({required bool hasManagerAccess, String? teamMemberId}) {
-    return _workspaceRepository?.getProjectsForUser(hasManagerAccess: hasManagerAccess, teamMemberId: teamMemberId) ??
+  List<Project> getProjectsForUser({
+    required bool hasManagerAccess,
+    String? teamMemberId,
+  }) {
+    return _workspaceRepository?.getProjectsForUser(
+          hasManagerAccess: hasManagerAccess,
+          teamMemberId: teamMemberId,
+        ) ??
         const [];
   }
 
@@ -173,7 +188,11 @@ class TimeDataProvider extends ChangeNotifier {
   Future<void> updateTimeEntry(TimeEntry entry) async {
     final repository = _timeEntriesRepository;
     if (repository == null) return;
-    final normalizedDate = DateTime(entry.date.year, entry.date.month, entry.date.day);
+    final normalizedDate = DateTime(
+      entry.date.year,
+      entry.date.month,
+      entry.date.day,
+    );
     await repository.updateTimeEntry(entry.copyWith(date: normalizedDate));
   }
 

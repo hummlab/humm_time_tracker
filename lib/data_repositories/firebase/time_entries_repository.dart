@@ -5,20 +5,23 @@ import '../../models/time/time_entry.dart';
 import '../data_repository.dart';
 
 class TimeEntriesQuery {
-  const TimeEntriesQuery({this.status});
+  const TimeEntriesQuery({this.status, this.start, this.end});
 
   final TimeEntryStatus? status;
+  final DateTime? start;
+  final DateTime? end;
 }
 
-class TimeEntriesRepository extends DataRepository<List<TimeEntry>, TimeEntriesQuery> {
+class TimeEntriesRepository
+    extends DataRepository<List<TimeEntry>, TimeEntriesQuery> {
   TimeEntriesRepository(this._dataProvider) : super(const []);
 
   final TimeEntryDataProvider _dataProvider;
   StreamSubscription<List<TimeEntry>>? _subscription;
 
-  void start({TimeEntryStatus? status}) {
+  void start({TimeEntriesQuery query = const TimeEntriesQuery()}) {
     _subscription?.cancel();
-    _subscription = _watchStream(status).listen(emit, onError: emitError);
+    _subscription = _watchStream(query).listen(emit, onError: emitError);
   }
 
   void stop() {
@@ -30,7 +33,7 @@ class TimeEntriesRepository extends DataRepository<List<TimeEntry>, TimeEntriesQ
   @override
   Future<List<TimeEntry>> fetch(TimeEntriesQuery query) async {
     try {
-      final entries = await _watchStream(query.status).first;
+      final entries = await _watchStream(query).first;
       emit(entries);
       return entries;
     } catch (e, st) {
@@ -49,6 +52,21 @@ class TimeEntriesRepository extends DataRepository<List<TimeEntry>, TimeEntriesQ
 
   Future<void> deleteTimeEntry(String id) async {
     await _dataProvider.deleteTimeEntry(id);
+  }
+
+  Future<List<TimeEntry>> fetchByDateRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    try {
+      return await _dataProvider.fetchTimeEntriesByDateRange(
+        start: start,
+        end: end,
+      );
+    } catch (e, st) {
+      emitError(e, st);
+      return const [];
+    }
   }
 
   Future<void> updateTimeEntriesStatus(
@@ -85,11 +103,26 @@ class TimeEntriesRepository extends DataRepository<List<TimeEntry>, TimeEntriesQ
     }
   }
 
-  Stream<List<TimeEntry>> _watchStream(TimeEntryStatus? status) {
-    if (status == null) {
+  Stream<List<TimeEntry>> _watchStream(TimeEntriesQuery query) {
+    final hasRange = query.start != null && query.end != null;
+    if (hasRange) {
+      if (query.status != null) {
+        return _dataProvider.watchTimeEntriesByStatusAndDateRange(
+          query.status!,
+          start: query.start!,
+          end: query.end!,
+        );
+      }
+      return _dataProvider.watchTimeEntriesByDateRange(
+        start: query.start!,
+        end: query.end!,
+      );
+    }
+
+    if (query.status == null) {
       return _dataProvider.watchTimeEntries();
     }
-    return _dataProvider.watchTimeEntriesByStatus(status);
+    return _dataProvider.watchTimeEntriesByStatus(query.status!);
   }
 
   @override

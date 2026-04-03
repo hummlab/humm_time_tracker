@@ -10,11 +10,13 @@ class ReportClientsDropdown extends StatefulWidget {
     required this.clients,
     required this.selectedClientIds,
     required this.onChanged,
+    this.compact = false,
   });
 
   final List<Client> clients;
   final List<String> selectedClientIds;
   final ValueChanged<List<String>> onChanged;
+  final bool compact;
 
   @override
   State<ReportClientsDropdown> createState() => _ReportClientsDropdownState();
@@ -65,7 +67,10 @@ class _ReportClientsDropdownState extends State<ReportClientsDropdown> {
                     child: DesktopMultiSelectPicker(
                       title: 'Clients',
                       icon: Icons.business,
-                      items: widget.clients.map((c) => FilterItem(c.id, c.name, null)).toList(),
+                      items:
+                          widget.clients
+                              .map((c) => FilterItem(c.id, c.name, null))
+                              .toList(),
                       selectedIds: widget.selectedClientIds,
                       onSelectionChanged: widget.onChanged,
                       onClose: _closeDropdown,
@@ -91,13 +96,18 @@ class _ReportClientsDropdownState extends State<ReportClientsDropdown> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       isScrollControlled: true,
       builder:
           (context) => MobileMultiSelectPicker(
             title: 'Clients',
             icon: Icons.business,
-            items: widget.clients.map((c) => FilterItem(c.id, c.name, null)).toList(),
+            items:
+                widget.clients
+                    .map((c) => FilterItem(c.id, c.name, null))
+                    .toList(),
             selectedIds: widget.selectedClientIds,
             onSelectionChanged: widget.onChanged,
           ),
@@ -112,31 +122,48 @@ class _ReportClientsDropdownState extends State<ReportClientsDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedClients = widget.clients.where((c) => widget.selectedClientIds.contains(c.id)).toList();
+    final selectedClients =
+        widget.clients
+            .where((c) => widget.selectedClientIds.contains(c.id))
+            .toList();
 
     return CompositedTransformTarget(
       link: _layerLink,
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: widget.compact ? 10 : 14,
+          ),
           decoration: BoxDecoration(
             color: AppTheme.surfaceDark,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark),
+            border: Border.all(
+              color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark,
+            ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.business,
-                size: 18,
-                color: selectedClients.isNotEmpty ? AppTheme.primaryAccent : AppTheme.textMuted,
+                size: widget.compact ? 16 : 18,
+                color:
+                    selectedClients.isNotEmpty
+                        ? AppTheme.primaryAccent
+                        : AppTheme.textMuted,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: widget.compact ? 6 : 8),
               Expanded(
                 child:
                     selectedClients.isEmpty
-                        ? const Text('All Clients', style: TextStyle(color: AppTheme.textMuted))
+                        ? Text(
+                          'All Clients',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: widget.compact ? 12 : 14,
+                          ),
+                        )
                         : Wrap(
                           spacing: 4,
                           runSpacing: 4,
@@ -145,33 +172,52 @@ class _ReportClientsDropdownState extends State<ReportClientsDropdown> {
                                 .take(2)
                                 .map(
                                   (client) => Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.primaryAccent.withValues(alpha: 0.2),
+                                      color: AppTheme.primaryAccent.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       client.name,
-                                      style: const TextStyle(fontSize: 11, color: AppTheme.primaryAccent),
+                                      style: TextStyle(
+                                        fontSize: widget.compact ? 10 : 11,
+                                        color: AppTheme.primaryAccent,
+                                      ),
                                     ),
                                   ),
                                 ),
                             if (selectedClients.length > 2)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.textMuted.withValues(alpha: 0.2),
+                                  color: AppTheme.textMuted.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   '+${selectedClients.length - 2}',
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.textMuted,
+                                  ),
                                 ),
                               ),
                           ],
                         ),
               ),
-              Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: AppTheme.textMuted),
+              Icon(
+                _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: AppTheme.textMuted,
+              ),
             ],
           ),
         ),

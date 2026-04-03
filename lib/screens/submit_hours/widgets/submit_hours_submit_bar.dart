@@ -33,11 +33,15 @@ class SubmitHoursSubmitBar extends StatelessWidget {
                 children: [
                   Text(
                     '$selectedCount entries selected',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   Text(
                     '${_formatDuration(totalMinutes)} total',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -49,7 +53,10 @@ class SubmitHoursSubmitBar extends StatelessWidget {
                       ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryDark),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppTheme.primaryDark,
+                        ),
                       )
                       : const Icon(Icons.send),
               label: const Text('Submit for Approval'),

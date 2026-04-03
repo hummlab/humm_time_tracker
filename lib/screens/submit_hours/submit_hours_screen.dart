@@ -16,7 +16,8 @@ class SubmitHoursScreen extends StatefulWidget {
   State<SubmitHoursScreen> createState() => _SubmitHoursScreenState();
 }
 
-class _SubmitHoursScreenState extends State<SubmitHoursScreen> with SingleTickerProviderStateMixin {
+class _SubmitHoursScreenState extends State<SubmitHoursScreen>
+    with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final SubmitHoursCubit _cubit;
   String? _lastToastMessage;
@@ -45,7 +46,11 @@ class _SubmitHoursScreenState extends State<SubmitHoursScreen> with SingleTicker
 
     _lastToastMessage = message;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppToast.show(context, message, type: state.toastType ?? AppToastType.info);
+      AppToast.show(
+        context,
+        message,
+        type: state.toastType ?? AppToastType.info,
+      );
     });
     _cubit.clearToast();
   }
@@ -83,7 +88,9 @@ class _SubmitHoursScreenState extends State<SubmitHoursScreen> with SingleTicker
                       isSubmitting: state.isSubmitting,
                       isDesktop: isDesktop,
                       isAllSelected:
-                          state.draftEntries.isNotEmpty && state.selectedEntryIds.length == state.draftEntries.length,
+                          state.draftEntries.isNotEmpty &&
+                          state.selectedEntryIds.length ==
+                              state.draftEntries.length,
                       activeQuickSelect: state.activeQuickSelect,
                       getProjectById: _cubit.getProjectById,
                       getTagById: _cubit.getTagById,

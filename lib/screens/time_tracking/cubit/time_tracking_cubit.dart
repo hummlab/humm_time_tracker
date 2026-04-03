@@ -12,7 +12,8 @@ import 'package:time_tracker/widgets/app_toast.dart';
 import 'time_tracking_state.dart';
 
 class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
-  TimeTrackingCubit(this._timeDataProvider, this._authDataProvider) : super(TimeTrackingState.initial()) {
+  TimeTrackingCubit(this._timeDataProvider, this._authDataProvider)
+    : super(TimeTrackingState.initial()) {
     _timeDataProvider.addListener(_syncFromProvider);
     _authDataProvider.addListener(_syncFromProvider);
     _syncFromProvider();
@@ -23,7 +24,9 @@ class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
 
   void _syncFromProvider() {
     final selectedDate = _timeDataProvider.selectedDate;
-    final weekStart = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
+    final weekStart = selectedDate.subtract(
+      Duration(days: selectedDate.weekday - 1),
+    );
 
     emit(
       state.copyWith(
@@ -78,8 +81,14 @@ class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
     return _timeDataProvider.getCurrentUserTeamMember();
   }
 
-  List<Project> getProjectsForUser({required bool hasManagerAccess, String? teamMemberId}) {
-    return _timeDataProvider.getProjectsForUser(hasManagerAccess: hasManagerAccess, teamMemberId: teamMemberId);
+  List<Project> getProjectsForUser({
+    required bool hasManagerAccess,
+    String? teamMemberId,
+  }) {
+    return _timeDataProvider.getProjectsForUser(
+      hasManagerAccess: hasManagerAccess,
+      teamMemberId: teamMemberId,
+    );
   }
 
   void startTimer({
@@ -110,13 +119,24 @@ class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
         ),
       );
     } catch (_) {
-      emit(state.copyWith(isStoppingTimer: false, toastMessage: 'Failed to stop timer', toastType: AppToastType.error));
+      emit(
+        state.copyWith(
+          isStoppingTimer: false,
+          toastMessage: 'Failed to stop timer',
+          toastType: AppToastType.error,
+        ),
+      );
     }
   }
 
   void cancelTimer() {
     _timeDataProvider.cancelTimer();
-    emit(state.copyWith(toastMessage: 'Timer canceled', toastType: AppToastType.info));
+    emit(
+      state.copyWith(
+        toastMessage: 'Timer canceled',
+        toastType: AppToastType.info,
+      ),
+    );
   }
 
   void clearToast() {
@@ -162,12 +182,20 @@ class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
     return _timeDataProvider.jiraRepository.searchIssues(query, limit: limit);
   }
 
-  DateTime get weekStart => state.selectedDate.subtract(Duration(days: state.selectedDate.weekday - 1));
+  DateTime get weekStart => state.selectedDate.subtract(
+    Duration(days: state.selectedDate.weekday - 1),
+  );
 
-  List<TimeEntry> entriesForDate(DateTime date, {bool currentUserOnly = false}) {
+  List<TimeEntry> entriesForDate(
+    DateTime date, {
+    bool currentUserOnly = false,
+  }) {
     var entries = _timeDataProvider.getEntriesForDate(date);
     if (currentUserOnly && state.currentUserId != null) {
-      entries = entries.where((entry) => entry.createdByUserId == state.currentUserId).toList();
+      entries =
+          entries
+              .where((entry) => entry.createdByUserId == state.currentUserId)
+              .toList();
     }
     return entries;
   }
@@ -178,7 +206,10 @@ class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
       final date = weekStart.add(Duration(days: i));
       final normalized = DateTime(date.year, date.month, date.day);
       final entries = entriesForDate(date, currentUserOnly: currentUserOnly);
-      minutesByDate[normalized] = entries.fold(0, (sum, entry) => sum + entry.durationMinutes);
+      minutesByDate[normalized] = entries.fold(
+        0,
+        (sum, entry) => sum + entry.durationMinutes,
+      );
     }
     return minutesByDate;
   }
@@ -186,7 +217,10 @@ class TimeTrackingCubit extends BaseCubit<TimeTrackingState> {
   List<TimeEntry> weekEntries({bool currentUserOnly = false}) {
     var entries = state.weekEntries;
     if (currentUserOnly && state.currentUserId != null) {
-      entries = entries.where((entry) => entry.createdByUserId == state.currentUserId).toList();
+      entries =
+          entries
+              .where((entry) => entry.createdByUserId == state.currentUserId)
+              .toList();
     }
     return entries;
   }

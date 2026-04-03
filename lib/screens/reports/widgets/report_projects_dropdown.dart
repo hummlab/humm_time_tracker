@@ -10,11 +10,13 @@ class ReportProjectsDropdown extends StatefulWidget {
     required this.projects,
     required this.selectedProjectIds,
     required this.onChanged,
+    this.compact = false,
   });
 
   final List<Project> projects;
   final List<String> selectedProjectIds;
   final ValueChanged<List<String>> onChanged;
+  final bool compact;
 
   @override
   State<ReportProjectsDropdown> createState() => _ReportProjectsDropdownState();
@@ -27,7 +29,9 @@ class _ReportProjectsDropdownState extends State<ReportProjectsDropdown> {
 
   List<Project> get _sortedProjects {
     final projects = List<Project>.from(widget.projects);
-    projects.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    projects.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
     return projects;
   }
 
@@ -71,7 +75,10 @@ class _ReportProjectsDropdownState extends State<ReportProjectsDropdown> {
                     child: DesktopMultiSelectPicker(
                       title: 'Projects',
                       icon: Icons.folder_outlined,
-                      items: _sortedProjects.map((p) => FilterItem(p.id, p.name, p.color)).toList(),
+                      items:
+                          _sortedProjects
+                              .map((p) => FilterItem(p.id, p.name, p.color))
+                              .toList(),
                       selectedIds: widget.selectedProjectIds,
                       onSelectionChanged: widget.onChanged,
                       onClose: _closeDropdown,
@@ -98,13 +105,18 @@ class _ReportProjectsDropdownState extends State<ReportProjectsDropdown> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       isScrollControlled: true,
       builder:
           (context) => MobileMultiSelectPicker(
             title: 'Projects',
             icon: Icons.folder_outlined,
-            items: _sortedProjects.map((p) => FilterItem(p.id, p.name, p.color)).toList(),
+            items:
+                _sortedProjects
+                    .map((p) => FilterItem(p.id, p.name, p.color))
+                    .toList(),
             selectedIds: widget.selectedProjectIds,
             onSelectionChanged: widget.onChanged,
             compactItems: true,
@@ -120,31 +132,48 @@ class _ReportProjectsDropdownState extends State<ReportProjectsDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedProjects = _sortedProjects.where((p) => widget.selectedProjectIds.contains(p.id)).toList();
+    final selectedProjects =
+        _sortedProjects
+            .where((p) => widget.selectedProjectIds.contains(p.id))
+            .toList();
 
     return CompositedTransformTarget(
       link: _layerLink,
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: widget.compact ? 10 : 14,
+          ),
           decoration: BoxDecoration(
             color: AppTheme.surfaceDark,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark),
+            border: Border.all(
+              color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark,
+            ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.folder_outlined,
-                size: 18,
-                color: selectedProjects.isNotEmpty ? AppTheme.primaryAccent : AppTheme.textMuted,
+                size: widget.compact ? 16 : 18,
+                color:
+                    selectedProjects.isNotEmpty
+                        ? AppTheme.primaryAccent
+                        : AppTheme.textMuted,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: widget.compact ? 6 : 8),
               Expanded(
                 child:
                     selectedProjects.isEmpty
-                        ? const Text('All Projects', style: TextStyle(color: AppTheme.textMuted))
+                        ? Text(
+                          'All Projects',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: widget.compact ? 12 : 14,
+                          ),
+                        )
                         : Wrap(
                           spacing: 4,
                           runSpacing: 4,
@@ -153,33 +182,54 @@ class _ReportProjectsDropdownState extends State<ReportProjectsDropdown> {
                                 .take(2)
                                 .map(
                                   (project) => Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.colorFromHex(project.color).withValues(alpha: 0.2),
+                                      color: AppTheme.colorFromHex(
+                                        project.color,
+                                      ).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       project.name,
-                                      style: TextStyle(fontSize: 11, color: AppTheme.colorFromHex(project.color)),
+                                      style: TextStyle(
+                                        fontSize: widget.compact ? 10 : 11,
+                                        color: AppTheme.colorFromHex(
+                                          project.color,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                             if (selectedProjects.length > 2)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.textMuted.withValues(alpha: 0.2),
+                                  color: AppTheme.textMuted.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   '+${selectedProjects.length - 2}',
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.textMuted,
+                                  ),
                                 ),
                               ),
                           ],
                         ),
               ),
-              Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: AppTheme.textMuted),
+              Icon(
+                _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: AppTheme.textMuted,
+              ),
             ],
           ),
         ),

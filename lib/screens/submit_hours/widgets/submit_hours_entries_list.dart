@@ -71,18 +71,29 @@ class _DateSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(top: 6, bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceDark.withValues(alpha: 0.6),
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Row(
             children: [
-              Text(
-                dateFormat.format(section.date),
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppTheme.textSecondary),
+              Expanded(
+                child: Text(
+                  dateFormat.format(section.date),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
               ),
-              const Spacer(),
               Text(
                 '${hours.toStringAsFixed(1)}h',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.primaryAccent),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.primaryAccent),
               ),
             ],
           ),
@@ -126,14 +137,13 @@ class _EntryCard extends StatelessWidget {
       onTap: isForReview ? null : onToggle,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryAccent.withValues(alpha: 0.1) : AppTheme.cardDark,
+          color:
+              isSelected
+                  ? AppTheme.primaryAccent.withValues(alpha: 0.1)
+                  : AppTheme.cardDark.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppTheme.primaryAccent : AppTheme.borderDark,
-            width: isSelected ? 2 : 1,
-          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,8 +164,12 @@ class _EntryCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        entry.description.isEmpty ? '(No description)' : entry.description,
+                        entry.description.isEmpty
+                            ? '(No description)'
+                            : entry.description,
                         style: Theme.of(context).textTheme.bodyMedium,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       if (project != null || tags.isNotEmpty) ...[
                         const SizedBox(height: 6),
@@ -172,27 +186,42 @@ class _EntryCard extends StatelessWidget {
                                     width: 8,
                                     height: 8,
                                     decoration: BoxDecoration(
-                                      color: AppTheme.colorFromHex(project!.color),
+                                      color: AppTheme.colorFromHex(
+                                        project!.color,
+                                      ),
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     project!.name,
-                                    style: TextStyle(fontSize: 12, color: AppTheme.colorFromHex(project!.color)),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.colorFromHex(
+                                        project!.color,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
                             ...tags.map(
                               (tag) => Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.colorFromHex(tag.color).withValues(alpha: 0.15),
+                                  color: AppTheme.colorFromHex(
+                                    tag.color,
+                                  ).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   '#${tag.name}',
-                                  style: TextStyle(fontSize: 10, color: AppTheme.colorFromHex(tag.color)),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppTheme.colorFromHex(tag.color),
+                                  ),
                                 ),
                               ),
                             ),
@@ -202,16 +231,13 @@ class _EntryCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryAccent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    entry.formattedDuration,
-                    style: const TextStyle(color: AppTheme.primaryAccent, fontWeight: FontWeight.w600, fontSize: 13),
+                const SizedBox(width: 12),
+                Text(
+                  entry.formattedDuration,
+                  style: const TextStyle(
+                    color: AppTheme.primaryAccent,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -223,12 +249,18 @@ class _EntryCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppTheme.tertiaryAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.tertiaryAccent.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppTheme.tertiaryAccent.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.feedback_outlined, size: 16, color: AppTheme.tertiaryAccent),
+                    const Icon(
+                      Icons.feedback_outlined,
+                      size: 16,
+                      color: AppTheme.tertiaryAccent,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
@@ -236,13 +268,18 @@ class _EntryCard extends StatelessWidget {
                         children: [
                           Text(
                             'Rejection Reason:',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(
                               color: AppTheme.tertiaryAccent,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(entry.rejectionReason!, style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            entry.rejectionReason!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                         ],
                       ),
                     ),

@@ -8,17 +8,21 @@ class TimeEntryDataProvider {
 
   final FirebaseCoreDataProvider _core;
 
-  CollectionReference<Map<String, dynamic>> get _timeEntriesCollection => _core.organizationCollection('timeEntries');
+  CollectionReference<Map<String, dynamic>> get _timeEntriesCollection =>
+      _core.organizationCollection('timeEntries');
 
   Stream<List<TimeEntry>> watchTimeEntries() {
     return _timeEntriesCollection.snapshots().map((snapshot) {
-      final entries = snapshot.docs.map((doc) => TimeEntry.fromFirestore(doc)).toList();
+      final entries =
+          snapshot.docs.map((doc) => TimeEntry.fromFirestore(doc)).toList();
       entries.sort((a, b) => b.date.compareTo(a.date));
       return entries;
     });
   }
 
-  Future<DocumentReference<Map<String, dynamic>>> addTimeEntry(TimeEntry entry) async {
+  Future<DocumentReference<Map<String, dynamic>>> addTimeEntry(
+    TimeEntry entry,
+  ) async {
     return _timeEntriesCollection.add(entry.toFirestore());
   }
 
@@ -43,7 +47,8 @@ class TimeEntryDataProvider {
       final ref = _timeEntriesCollection.doc(entryId);
       final updateData = <String, dynamic>{'status': status.value};
 
-      if (status == TimeEntryStatus.approved || status == TimeEntryStatus.rejected) {
+      if (status == TimeEntryStatus.approved ||
+          status == TimeEntryStatus.rejected) {
         updateData['approvedByUserId'] = approvedByUserId;
         updateData['approvedAt'] = Timestamp.fromDate(now);
       }
@@ -59,11 +64,89 @@ class TimeEntryDataProvider {
   }
 
   Stream<List<TimeEntry>> watchTimeEntriesByStatus(TimeEntryStatus status) {
-    return _timeEntriesCollection.where('status', isEqualTo: status.value).snapshots().map((snapshot) {
-      final entries = snapshot.docs.map((doc) => TimeEntry.fromFirestore(doc)).toList();
-      entries.sort((a, b) => b.date.compareTo(a.date));
-      return entries;
-    });
+    return _timeEntriesCollection
+        .where('status', isEqualTo: status.value)
+        .snapshots()
+        .map((snapshot) {
+          final entries =
+              snapshot.docs.map((doc) => TimeEntry.fromFirestore(doc)).toList();
+          entries.sort((a, b) => b.date.compareTo(a.date));
+          return entries;
+        });
+  }
+
+  Stream<List<TimeEntry>> watchTimeEntriesByDateRange({
+    required DateTime start,
+    required DateTime end,
+  }) {
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+
+    return _timeEntriesCollection
+        .where(
+          'date',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
+        )
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(normalizedEnd))
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          final entries =
+              snapshot.docs.map((doc) => TimeEntry.fromFirestore(doc)).toList();
+          entries.sort((a, b) => b.date.compareTo(a.date));
+          return entries;
+        });
+  }
+
+  Stream<List<TimeEntry>> watchTimeEntriesByStatusAndDateRange(
+    TimeEntryStatus status, {
+    required DateTime start,
+    required DateTime end,
+  }) {
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+
+    return _timeEntriesCollection
+        .where('status', isEqualTo: status.value)
+        .where(
+          'date',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
+        )
+        .where('date', isLessThanOrEqualTo: Timestamp.fromDate(normalizedEnd))
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          final entries =
+              snapshot.docs.map((doc) => TimeEntry.fromFirestore(doc)).toList();
+          entries.sort((a, b) => b.date.compareTo(a.date));
+          return entries;
+        });
+  }
+
+  Future<List<TimeEntry>> fetchTimeEntriesByDateRange({
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final normalizedStart = DateTime(start.year, start.month, start.day);
+    final normalizedEnd = DateTime(end.year, end.month, end.day);
+
+    final snapshot =
+        await _timeEntriesCollection
+            .where(
+              'date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
+            )
+            .where(
+              'date',
+              isLessThanOrEqualTo: Timestamp.fromDate(normalizedEnd),
+            )
+            .orderBy('date', descending: true)
+            .get();
+
+    final entries =
+        snapshot.docs.map((doc) => TimeEntry.fromFirestore(doc)).toList();
+    entries.sort((a, b) => b.date.compareTo(a.date));
+    return entries;
   }
 
   Stream<List<TimeEntry>> watchPendingTimeEntries() {

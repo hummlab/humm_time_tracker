@@ -32,27 +32,39 @@ class SubmitHoursSummaryBar extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: config.color.withValues(alpha: 0.1),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: config.color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(config.icon, color: config.color),
-              const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(config.title, style: Theme.of(context).textTheme.titleMedium),
-                    Text(
-                      '$entryCount entries • ${_formatDuration(totalMinutes)} total',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    Icon(config.icon, color: config.color, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            config.title,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          Text(
+                            '$entryCount entries • ${_formatDuration(totalMinutes)} total',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppTheme.textMuted),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -60,6 +72,14 @@ class SubmitHoursSummaryBar extends StatelessWidget {
               if (showSelectionControls)
                 TextButton(
                   onPressed: entryCount == 0 ? null : onToggleSelectAll,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   child: Text(isAllSelected ? 'Deselect All' : 'Select All'),
                 ),
             ],
@@ -67,17 +87,21 @@ class SubmitHoursSummaryBar extends StatelessWidget {
           if (showSelectionControls) ...[
             const SizedBox(height: 12),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 6,
+              runSpacing: 6,
               children: [
                 _QuickSelectChip(
                   label: 'This Month',
-                  isActive: activeQuickSelect == SubmitHoursQuickSelectPeriod.thisMonth,
+                  isActive:
+                      activeQuickSelect ==
+                      SubmitHoursQuickSelectPeriod.thisMonth,
                   onTap: onSelectThisMonth,
                 ),
                 _QuickSelectChip(
                   label: 'Last Month',
-                  isActive: activeQuickSelect == SubmitHoursQuickSelectPeriod.lastMonth,
+                  isActive:
+                      activeQuickSelect ==
+                      SubmitHoursQuickSelectPeriod.lastMonth,
                   onTap: onSelectLastMonth,
                 ),
               ],
@@ -102,7 +126,11 @@ class SubmitHoursSummaryBar extends StatelessWidget {
 }
 
 class _QuickSelectChip extends StatelessWidget {
-  const _QuickSelectChip({required this.label, required this.isActive, required this.onTap});
+  const _QuickSelectChip({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
 
   final String label;
   final bool isActive;
@@ -115,26 +143,33 @@ class _QuickSelectChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isActive ? AppTheme.primaryAccent.withValues(alpha: 0.15) : AppTheme.surfaceDark,
+          color:
+              isActive
+                  ? AppTheme.primaryAccent.withValues(alpha: 0.15)
+                  : AppTheme.surfaceDark,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isActive ? AppTheme.primaryAccent : AppTheme.borderDark, width: isActive ? 1.5 : 1),
+          border: Border.all(
+            color: isActive ? AppTheme.primaryAccent : AppTheme.borderDark,
+            width: isActive ? 1.5 : 1,
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               isActive ? Icons.check_circle : Icons.calendar_today,
-              size: 14,
+              size: 13,
               color: isActive ? AppTheme.primaryAccent : AppTheme.textSecondary,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
-                fontSize: 13,
-                color: isActive ? AppTheme.primaryAccent : AppTheme.textSecondary,
+                fontSize: 12,
+                color:
+                    isActive ? AppTheme.primaryAccent : AppTheme.textSecondary,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
@@ -148,7 +183,11 @@ class _QuickSelectChip extends StatelessWidget {
 enum SubmitHoursSummaryMode { draft, pending, rejected }
 
 class _SummaryConfig {
-  const _SummaryConfig({required this.color, required this.icon, required this.title});
+  const _SummaryConfig({
+    required this.color,
+    required this.icon,
+    required this.title,
+  });
 
   final Color color;
   final IconData icon;
@@ -169,7 +208,11 @@ class _SummaryConfig {
           title: 'Awaiting approval',
         );
       case SubmitHoursSummaryMode.draft:
-        return const _SummaryConfig(color: AppTheme.primaryAccent, icon: Icons.schedule, title: 'Ready to submit');
+        return const _SummaryConfig(
+          color: AppTheme.primaryAccent,
+          icon: Icons.schedule,
+          title: 'Ready to submit',
+        );
     }
   }
 }

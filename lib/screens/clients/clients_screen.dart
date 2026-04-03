@@ -24,7 +24,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = ClientsCubit(AppDependencies.instance.workspaceRepository, AppDependencies.instance.clientsRepository);
+    _cubit = ClientsCubit(
+      AppDependencies.instance.workspaceRepository,
+      AppDependencies.instance.clientsRepository,
+    );
   }
 
   @override
@@ -39,7 +42,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     _lastToastMessage = message;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppToast.show(context, message, type: state.toastType ?? AppToastType.info);
+      AppToast.show(
+        context,
+        message,
+        type: state.toastType ?? AppToastType.info,
+      );
     });
     _cubit.clearToast();
   }
@@ -63,14 +70,18 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           body:
               state.clients.isEmpty
-                  ? ClientsEmptyState(onAddClient: () => _showAddClientDialog(context))
+                  ? ClientsEmptyState(
+                    onAddClient: () => _showAddClientDialog(context),
+                  )
                   : ClientsList(
                     clients: state.clients,
                     isDesktop: isDesktop,
                     projectCountFor: _cubit.projectCountFor,
-                    onEditClient: (client) => _showEditClientDialog(context, client),
+                    onEditClient:
+                        (client) => _showEditClientDialog(context, client),
                     onDeleteClient: (client) => _confirmDelete(context, client),
-                    onPreviewDashboard: (client) => _openDashboardPreview(context, client),
+                    onPreviewDashboard:
+                        (client) => _openDashboardPreview(context, client),
                   ),
         );
       },
@@ -86,17 +97,29 @@ class _ClientsScreenState extends State<ClientsScreen> {
   }
 
   Future<void> _showClientDialog(BuildContext context, Client? client) async {
-    await showClientDialog(context: context, client: client, onSave: _cubit.saveClient);
+    await showClientDialog(
+      context: context,
+      client: client,
+      onSave: _cubit.saveClient,
+    );
   }
 
   void _confirmDelete(BuildContext context, Client client) {
-    showDeleteClientDialog(context: context, client: client, onDelete: _cubit.deleteClient);
+    showDeleteClientDialog(
+      context: context,
+      client: client,
+      onDelete: _cubit.deleteClient,
+    );
   }
 
   void _openDashboardPreview(BuildContext context, Client client) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ClientDashboardScreen(clientId: client.id, isPreview: true)),
+      MaterialPageRoute(
+        builder:
+            (context) =>
+                ClientDashboardScreen(clientId: client.id, isPreview: true),
+      ),
     );
   }
 }

@@ -14,10 +14,16 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: isEditing ? AppTheme.warningAccent.withValues(alpha: 0.05) : AppTheme.cardDark,
+        color:
+            isEditing
+                ? AppTheme.warningAccent.withValues(alpha: 0.05)
+                : AppTheme.cardDark,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isEditing ? AppTheme.warningAccent.withValues(alpha: 0.5) : AppTheme.borderDark,
+          color:
+              isEditing
+                  ? AppTheme.warningAccent.withValues(alpha: 0.5)
+                  : AppTheme.borderDark,
           width: isEditing ? 2 : 1,
         ),
       ),
@@ -37,7 +43,10 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                 ),
                 child: Icon(
                   isEditing ? Icons.edit : Icons.add_circle_outline,
-                  color: isEditing ? AppTheme.warningAccent : AppTheme.primaryAccent,
+                  color:
+                      isEditing
+                          ? AppTheme.warningAccent
+                          : AppTheme.primaryAccent,
                   size: 20,
                 ),
               ),
@@ -48,9 +57,9 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                   children: [
                     Text(
                       isEditing ? 'Edit Time Entry' : 'Add Time Entry',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleMedium?.copyWith(color: isEditing ? AppTheme.warningAccent : null),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: isEditing ? AppTheme.warningAccent : null,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Row(
@@ -58,15 +67,29 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                         Icon(
                           Icons.calendar_today,
                           size: 12,
-                          color: isEditing ? AppTheme.warningAccent : AppTheme.primaryAccent,
+                          color:
+                              isEditing
+                                  ? AppTheme.warningAccent
+                                  : AppTheme.primaryAccent,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          DateFormat('EEEE, MMM d, yyyy').format(widget.cubit.selectedDate),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isEditing ? AppTheme.warningAccent.withValues(alpha: 0.8) : AppTheme.primaryAccent,
+                        Expanded(
+                          child: Text(
+                            DateFormat(
+                              'EEEE, MMM d, yyyy',
+                            ).format(widget.cubit.selectedDate),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color:
+                                  isEditing
+                                      ? AppTheme.warningAccent.withValues(
+                                        alpha: 0.8,
+                                      )
+                                      : AppTheme.primaryAccent,
+                            ),
                           ),
                         ),
                       ],
@@ -88,13 +111,31 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                 }
               },
               decoration: InputDecoration(
-                hintText: 'What did you work on? (type to search ClickUp or Jira issues)',
+                hintText:
+                    'What did you work on? (type to search ClickUp or Jira issues)',
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 prefixIcon:
                     _selectedClickUpTask != null
-                        ? const Icon(Icons.task_alt, color: AppTheme.successAccent)
+                        ? const Icon(
+                          Icons.task_alt,
+                          size: 20,
+                          color: AppTheme.successAccent,
+                        )
                         : _selectedJiraIssue != null
-                        ? const Icon(Icons.bug_report_outlined, color: AppTheme.secondaryAccent)
-                        : const Icon(Icons.edit_outlined),
+                        ? const Icon(
+                          Icons.bug_report_outlined,
+                          size: 20,
+                          color: AppTheme.secondaryAccent,
+                        )
+                        : const Icon(
+                          Icons.edit_outlined,
+                          size: 20,
+                          color: Colors.white38,
+                        ),
                 suffixIcon:
                     _selectedClickUpTask != null || _selectedJiraIssue != null
                         ? IconButton(
@@ -111,6 +152,14 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                         : null,
                 errorText: _descriptionError,
                 errorStyle: const TextStyle(color: AppTheme.tertiaryAccent),
+                filled: false,
+                border: const UnderlineInputBorder(),
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: AppTheme.borderDark),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: AppTheme.primaryAccent),
+                ),
               ),
               maxLines: 4,
               minLines: 1,
@@ -124,7 +173,9 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
               decoration: BoxDecoration(
                 color: AppTheme.successAccent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.successAccent.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppTheme.successAccent.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -133,7 +184,11 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                   Expanded(
                     child: Text(
                       'Linked to ClickUp: ${_selectedClickUpTask!.shortId}',
-                      style: TextStyle(fontSize: 11, color: AppTheme.successAccent, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.successAccent,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   if (_selectedClickUpTask!.url != null)
@@ -142,7 +197,10 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                       onPressed: () async {
                         final url = Uri.parse(_selectedClickUpTask!.url!);
                         if (await canLaunchUrl(url)) {
-                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
                         }
                       },
                       padding: EdgeInsets.zero,
@@ -161,7 +219,9 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
               decoration: BoxDecoration(
                 color: AppTheme.secondaryAccent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.secondaryAccent.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppTheme.secondaryAccent.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -170,7 +230,11 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                   Expanded(
                     child: Text(
                       'Linked to Jira: ${_selectedJiraIssue!.shortId}',
-                      style: TextStyle(fontSize: 11, color: AppTheme.secondaryAccent, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.secondaryAccent,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   if (_selectedJiraIssue!.url != null)
@@ -179,7 +243,10 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
                       onPressed: () async {
                         final url = Uri.parse(_selectedJiraIssue!.url!);
                         if (await canLaunchUrl(url)) {
-                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
                         }
                       },
                       padding: EdgeInsets.zero,
@@ -192,127 +259,213 @@ extension TimeEntryFormStateWidgets on TimeEntryFormState {
             ),
           ],
           const SizedBox(height: 20),
-          Text('Duration', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppTheme.textSecondary)),
-          const SizedBox(height: 12),
-          DurationChips(
-            selectedDuration: _selectedDuration,
-            onSelected: (duration) {
-              updateState(() {
-                _selectedDuration = duration;
-                _durationError = null;
-              });
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 760;
+
+              final startTimeField = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Start time',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _startTimeController,
+                    readOnly: true,
+                    onTap: _pickStartTime,
+                    decoration: InputDecoration(
+                      hintText: 'HH:mm',
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      prefixIcon: const Icon(
+                        Icons.schedule_outlined,
+                        size: 20,
+                        color: Colors.white38,
+                      ),
+                      suffixIcon:
+                          _selectedStartTime != null
+                              ? IconButton(
+                                tooltip: 'Clear start time',
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: _clearStartTime,
+                              )
+                              : null,
+                    ),
+                  ),
+                ],
+              );
+
+              final durationField = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Duration',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DurationChips(
+                    compact: isNarrow,
+                    selectedDuration: _selectedDuration,
+                    onSelected: (duration) {
+                      updateState(() {
+                        _selectedDuration = duration;
+                        _durationError = null;
+                      });
+                    },
+                  ),
+                ],
+              );
+
+              if (isNarrow) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: startTimeField),
+                    const SizedBox(width: 12),
+                    Expanded(child: durationField),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: startTimeField),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 2, child: durationField),
+                ],
+              );
             },
           ),
           if (_durationError != null) ...[
             const SizedBox(height: 8),
-            Text(_durationError!, style: const TextStyle(color: AppTheme.tertiaryAccent, fontSize: 12)),
-          ],
-          const SizedBox(height: 20),
-          Text(
-            'Start time (optional)',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppTheme.textSecondary),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _startTimeController,
-            readOnly: true,
-            onTap: _pickStartTime,
-            decoration: InputDecoration(
-              hintText: 'HH:mm',
-              prefixIcon: const Icon(Icons.schedule_outlined),
-              suffixIcon:
-                  _selectedStartTime != null
-                      ? IconButton(
-                        tooltip: 'Clear start time',
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: _clearStartTime,
-                      )
-                      : null,
+            Text(
+              _durationError!,
+              style: const TextStyle(
+                color: AppTheme.tertiaryAccent,
+                fontSize: 12,
+              ),
             ),
-          ),
+          ],
           if (_selectedStartTime != null && _selectedDuration != null) ...[
             const SizedBox(height: 8),
             Builder(
               builder: (context) {
                 final start = _composeStartDateTime(widget.cubit.selectedDate)!;
                 final end = start.add(Duration(minutes: _selectedDuration!));
-                final preview = '${DateFormat('HH:mm').format(start)}–${DateFormat('HH:mm').format(end)}';
-                return Text('Preview: $preview', style: const TextStyle(fontSize: 12, color: AppTheme.textMuted));
+                final preview =
+                    '${DateFormat('HH:mm').format(start)}–${DateFormat('HH:mm').format(end)}';
+                return Text(
+                  'Preview: $preview',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textMuted,
+                  ),
+                );
               },
             ),
           ],
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 620;
+              final projectField = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Project',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ProjectDropdown(
+                    selectedProjectId: _selectedProjectId,
+                    projects: filteredProjects,
+                    onChanged: (value) {
+                      updateState(() {
+                        _selectedProjectId = value;
+                      });
+                    },
+                  ),
+                ],
+              );
+              final tagsField = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tags',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TagsDropdown(
+                    selectedTagIds: _selectedTagIds,
+                    tags: widget.cubit.tags,
+                    onChanged: (value) {
+                      updateState(() {
+                        _selectedTagIds = value;
+                      });
+                    },
+                  ),
+                ],
+              );
+
+              if (isNarrow) {
+                return Column(
                   children: [
-                    Text(
-                      'Project',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppTheme.textSecondary),
-                    ),
-                    const SizedBox(height: 8),
-                    ProjectDropdown(
-                      selectedProjectId: _selectedProjectId,
-                      projects: filteredProjects,
-                      onChanged: (value) {
-                        updateState(() {
-                          _selectedProjectId = value;
-                        });
-                      },
-                    ),
+                    projectField,
+                    const SizedBox(height: 16),
+                    tagsField,
                   ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tags',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppTheme.textSecondary),
-                    ),
-                    const SizedBox(height: 8),
-                    TagsDropdown(
-                      selectedTagIds: _selectedTagIds,
-                      tags: widget.cubit.tags,
-                      onChanged: (value) {
-                        updateState(() {
-                          _selectedTagIds = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: projectField),
+                  const SizedBox(width: 16),
+                  Expanded(child: tagsField),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 24),
           Row(
             children: [
               if (isEditing) ...[
                 Expanded(
-                  child: OutlinedButton.icon(
+                  child: OutlinedButton(
                     onPressed: _cancel,
-                    icon: const Icon(Icons.close),
-                    label: const Text('Cancel'),
-                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 24)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text('Cancel'),
                   ),
                 ),
                 const SizedBox(width: 12),
               ],
               Expanded(
-                flex: isEditing ? 2 : 1,
-                child: ElevatedButton.icon(
+                child: ElevatedButton(
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isEditing ? AppTheme.warningAccent : AppTheme.primaryAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    backgroundColor:
+                        isEditing
+                            ? AppTheme.warningAccent
+                            : AppTheme.primaryAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  icon: Icon(isEditing ? Icons.save : Icons.check),
-                  label: Text(isEditing ? 'Save Entry' : 'Add Entry'),
+                  child: Text(isEditing ? 'Save Entry' : 'Add Entry'),
                 ),
               ),
             ],

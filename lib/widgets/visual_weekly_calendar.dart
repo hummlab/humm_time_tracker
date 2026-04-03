@@ -12,9 +12,16 @@ enum _ResizeEdge { top, bottom }
 class VisualWeeklyCalendar extends StatefulWidget {
   final DateTime weekStart;
   final List<TimeEntry> entries;
-  final Function(DateTime startTime, DateTime endTime, Offset position, VoidCallback clearSelection) onSlotTap;
+  final Function(
+    DateTime startTime,
+    DateTime endTime,
+    Offset position,
+    VoidCallback clearSelection,
+  )
+  onSlotTap;
   final Function(TimeEntry entry, Offset position) onEntryTap;
-  final Function(TimeEntry entry, DateTime newStart, [int? newDuration]) onEntryMoved;
+  final Function(TimeEntry entry, DateTime newStart, [int? newDuration])
+  onEntryMoved;
   final Project? Function(String? id) getProjectById;
 
   const VisualWeeklyCalendar({
@@ -34,11 +41,15 @@ class VisualWeeklyCalendar extends StatefulWidget {
 class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   final double hourHeight = 60.0;
   final double timeColumnWidth = 60.0;
-  final ScrollController _scrollController = ScrollController();
+  final ScrollController _verticalScrollController = ScrollController();
+  final ScrollController _headerHorizontalScrollController = ScrollController();
+  final ScrollController _bodyHorizontalScrollController = ScrollController();
   final GlobalKey _gridKey = GlobalKey();
   static const int _snapMinutes = 15;
   static const int _minDurationMinutes = 15;
   static const double _resizeHandleHeight = 10.0;
+  static const double _minDayWidth = 96.0;
+  bool _isSyncingHorizontalScroll = false;
 
   _ResizeEdge? _resizeEdge;
   String? _resizingEntryId;
@@ -73,7 +84,9 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   }
 
   void _clearSelection() {
-    if (_selectionStart == null && _selectionEnd == null && _selectionDayIndex == null) {
+    if (_selectionStart == null &&
+        _selectionEnd == null &&
+        _selectionDayIndex == null) {
       return;
     }
     setState(() {
@@ -86,6 +99,8 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   @override
   void initState() {
     super.initState();
+    _headerHorizontalScrollController.addListener(_syncHorizontalFromHeader);
+    _bodyHorizontalScrollController.addListener(_syncHorizontalFromBody);
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToDefaultHour());
   }
 
@@ -95,7 +110,11 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
       timer.cancel();
     }
     _optimisticEntryTimers.clear();
-    _scrollController.dispose();
+    _headerHorizontalScrollController.removeListener(_syncHorizontalFromHeader);
+    _bodyHorizontalScrollController.removeListener(_syncHorizontalFromBody);
+    _verticalScrollController.dispose();
+    _headerHorizontalScrollController.dispose();
+    _bodyHorizontalScrollController.dispose();
     super.dispose();
   }
 
@@ -141,61 +160,94 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
   void _jumpToDefaultHour() {
     if (!mounted) return;
-    if (_scrollController.hasClients) {
-      _scrollController.jumpTo(hourHeight * 8);
+    if (_verticalScrollController.hasClients) {
+      _verticalScrollController.jumpTo(hourHeight * 8);
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToDefaultHour());
+  }
+
+  void _syncHorizontalFromHeader() {
+    if (_isSyncingHorizontalScroll ||
+        !_bodyHorizontalScrollController.hasClients)
+      return;
+    _isSyncingHorizontalScroll = true;
+    final target = _headerHorizontalScrollController.offset.clamp(
+      0.0,
+      _bodyHorizontalScrollController.position.maxScrollExtent,
+    );
+    _bodyHorizontalScrollController.jumpTo(target);
+    _isSyncingHorizontalScroll = false;
+  }
+
+  void _syncHorizontalFromBody() {
+    if (_isSyncingHorizontalScroll ||
+        !_headerHorizontalScrollController.hasClients)
+      return;
+    _isSyncingHorizontalScroll = true;
+    final target = _bodyHorizontalScrollController.offset.clamp(
+      0.0,
+      _headerHorizontalScrollController.position.maxScrollExtent,
+    );
+    _headerHorizontalScrollController.jumpTo(target);
+    _isSyncingHorizontalScroll = false;
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final dayWidth = (constraints.maxWidth - timeColumnWidth) / 7;
+        final isMobile = constraints.maxWidth < 900;
+        final availableDaysViewportWidth = (constraints.maxWidth -
+                timeColumnWidth)
+            .clamp(0.0, double.infinity);
+        final computedDayWidth = (availableDaysViewportWidth /
+                (isMobile ? 3 : 7))
+            .clamp(_minDayWidth, double.infinity);
+        final dayWidth = computedDayWidth;
+        final daysGridWidth = dayWidth * 7;
+        final canScrollHorizontally =
+            daysGridWidth > (availableDaysViewportWidth + 0.5);
         final displayEntries = _displayEntries;
 
         return Column(
           children: [
-            _buildDayHeader(dayWidth, displayEntries),
+            _buildHeaderRow(
+              dayWidth: dayWidth,
+              daysGridWidth: daysGridWidth,
+              entries: displayEntries,
+              canScrollHorizontally: canScrollHorizontally,
+              viewportWidth: availableDaysViewportWidth,
+            ),
             Expanded(
               child: SingleChildScrollView(
-                controller: _scrollController,
-                child: MouseRegion(
-                  onHover: (e) {
-                    setState(() {
-                      _hoverPosition = e.localPosition;
-                    });
-                  },
-                  onExit: (e) {
-                    setState(() {
-                      _hoverPosition = null;
-                    });
-                  },
-                  child: SizedBox(
-                    key: _gridKey,
-                    height: hourHeight * 24,
-                    child: Stack(
-                      children: [
-                        _buildGrid(dayWidth),
-                        if (_selectionStart != null && _selectionEnd != null && _selectionDayIndex != null)
-                          _buildSelectionBlock(dayWidth),
-                        ...displayEntries.map((entry) => _buildEntryBlock(entry, dayWidth)),
-                        if (_draggingEntry != null &&
-                            _dragPreviewDayIndex != null &&
-                            _dragPreviewTop != null &&
-                            _dragPreviewHeight != null)
-                          _buildDragPreview(dayWidth),
-                        if ((_draggingEntry != null || _resizingEntryId != null) && _dragCursorLocalPosition != null)
-                          _buildActiveDragTooltip(),
-                        _buildCurrentTimeIndicator(dayWidth),
-                        if (_hoverPosition != null &&
-                            _selectionStart == null &&
-                            _draggingEntry == null &&
-                            _resizingEntryId == null)
-                          _buildHoverTooltip(dayWidth),
-                      ],
-                    ),
+                controller: _verticalScrollController,
+                child: SizedBox(
+                  height: hourHeight * 24,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTimeColumn(),
+                      SizedBox(
+                        width: availableDaysViewportWidth,
+                        child:
+                            canScrollHorizontally
+                                ? SingleChildScrollView(
+                                  controller: _bodyHorizontalScrollController,
+                                  scrollDirection: Axis.horizontal,
+                                  child: _buildGridSurface(
+                                    dayWidth: dayWidth,
+                                    daysGridWidth: daysGridWidth,
+                                    entries: displayEntries,
+                                  ),
+                                )
+                                : _buildGridSurface(
+                                  dayWidth: dayWidth,
+                                  daysGridWidth: daysGridWidth,
+                                  entries: displayEntries,
+                                ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -206,7 +258,115 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     );
   }
 
-  void _updateDragPreviewFromGlobalOffset(Offset globalOffset, double dayWidth) {
+  Widget _buildHeaderRow({
+    required double dayWidth,
+    required double daysGridWidth,
+    required List<TimeEntry> entries,
+    required bool canScrollHorizontally,
+    required double viewportWidth,
+  }) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.surfaceDark,
+        border: Border(bottom: BorderSide(color: AppTheme.borderDark)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(width: timeColumnWidth),
+          SizedBox(
+            width: viewportWidth,
+            child:
+                canScrollHorizontally
+                    ? SingleChildScrollView(
+                      controller: _headerHorizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: _buildDayHeader(dayWidth, entries, daysGridWidth),
+                    )
+                    : _buildDayHeader(dayWidth, entries, daysGridWidth),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGridSurface({
+    required double dayWidth,
+    required double daysGridWidth,
+    required List<TimeEntry> entries,
+  }) {
+    return MouseRegion(
+      onHover: (e) {
+        setState(() {
+          _hoverPosition = e.localPosition;
+        });
+      },
+      onExit: (e) {
+        setState(() {
+          _hoverPosition = null;
+        });
+      },
+      child: SizedBox(
+        key: _gridKey,
+        width: daysGridWidth,
+        height: hourHeight * 24,
+        child: Stack(
+          children: [
+            _buildGrid(dayWidth, daysGridWidth),
+            if (_selectionStart != null &&
+                _selectionEnd != null &&
+                _selectionDayIndex != null)
+              _buildSelectionBlock(dayWidth),
+            ...entries.map((entry) => _buildEntryBlock(entry, dayWidth)),
+            if (_draggingEntry != null &&
+                _dragPreviewDayIndex != null &&
+                _dragPreviewTop != null &&
+                _dragPreviewHeight != null)
+              _buildDragPreview(dayWidth),
+            if ((_draggingEntry != null || _resizingEntryId != null) &&
+                _dragCursorLocalPosition != null)
+              _buildActiveDragTooltip(),
+            _buildCurrentTimeIndicator(dayWidth),
+            if (_hoverPosition != null &&
+                _selectionStart == null &&
+                _draggingEntry == null &&
+                _resizingEntryId == null)
+              _buildHoverTooltip(dayWidth),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeColumn() {
+    return SizedBox(
+      width: timeColumnWidth,
+      child: Column(
+        children: List.generate(
+          24,
+          (hour) => Container(
+            height: hourHeight,
+            alignment: Alignment.topRight,
+            padding: const EdgeInsets.only(right: 8, top: 2),
+            decoration: const BoxDecoration(
+              border: Border(
+                right: BorderSide(color: AppTheme.borderDark, width: 0.5),
+                bottom: BorderSide(color: AppTheme.borderDark, width: 0.5),
+              ),
+            ),
+            child: Text(
+              '${hour.toString().padLeft(2, '0')}:00',
+              style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _updateDragPreviewFromGlobalOffset(
+    Offset globalOffset,
+    double dayWidth,
+  ) {
     final gridContext = _gridKey.currentContext;
     if (gridContext == null || _draggingEntry == null) return;
 
@@ -218,11 +378,12 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     // so adding scroll offset here would double-count it.
     final topInStack = localOffset.dy - _dragGrabYOffset;
     final rawMinutes = (topInStack / hourHeight) * 60;
-    final snappedMinutes = ((rawMinutes / 15).round() * 15).clamp(0, minutesInDay - 15).toInt();
+    final snappedMinutes =
+        ((rawMinutes / 15).round() * 15).clamp(0, minutesInDay - 15).toInt();
 
     final snappedTop = (snappedMinutes / 60) * hourHeight;
 
-    final rawDayIndex = ((localOffset.dx - timeColumnWidth) / dayWidth).floor();
+    final rawDayIndex = (localOffset.dx / dayWidth).floor();
     final clampedDayIndex = rawDayIndex.clamp(0, 6);
 
     setState(() {
@@ -234,7 +395,10 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
   int _snapMinutesToGrid(int minutes, {required bool clampToEndOfDay}) {
     final maxMinutes = clampToEndOfDay ? 24 * 60 : (24 * 60) - _snapMinutes;
-    final snapped = ((minutes / _snapMinutes).round() * _snapMinutes).clamp(0, maxMinutes).toInt();
+    final snapped =
+        ((minutes / _snapMinutes).round() * _snapMinutes)
+            .clamp(0, maxMinutes)
+            .toInt();
     return snapped;
   }
 
@@ -246,7 +410,10 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     required double height,
   }) {
     final entryStartMinutes = (entryStart.hour * 60) + entryStart.minute;
-    final snappedStartMinutes = _snapMinutesToGrid(entryStartMinutes, clampToEndOfDay: false);
+    final snappedStartMinutes = _snapMinutesToGrid(
+      entryStartMinutes,
+      clampToEndOfDay: false,
+    );
     final snappedTop = (snappedStartMinutes / 60) * hourHeight;
 
     setState(() {
@@ -278,21 +445,34 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     final localOffset = gridBox.globalToLocal(globalOffset);
 
     final pointerMinutesRaw = ((localOffset.dy / hourHeight) * 60).round();
-    final pointerMinutesSnapped = _snapMinutesToGrid(pointerMinutesRaw, clampToEndOfDay: true);
+    final pointerMinutesSnapped = _snapMinutesToGrid(
+      pointerMinutesRaw,
+      clampToEndOfDay: true,
+    );
 
-    final originalStartMinutes = (_resizeOriginalStart!.hour * 60) + _resizeOriginalStart!.minute;
+    final originalStartMinutes =
+        (_resizeOriginalStart!.hour * 60) + _resizeOriginalStart!.minute;
     final originalEndMinutes = originalStartMinutes + _resizeOriginalDuration!;
 
     int newStartMinutes = originalStartMinutes;
     int newEndMinutes = originalEndMinutes;
 
     if (_resizeEdge == _ResizeEdge.top) {
-      newStartMinutes = pointerMinutesSnapped.clamp(0, originalEndMinutes - _minDurationMinutes);
+      newStartMinutes = pointerMinutesSnapped.clamp(
+        0,
+        originalEndMinutes - _minDurationMinutes,
+      );
     } else {
-      newEndMinutes = pointerMinutesSnapped.clamp(originalStartMinutes + _minDurationMinutes, 24 * 60);
+      newEndMinutes = pointerMinutesSnapped.clamp(
+        originalStartMinutes + _minDurationMinutes,
+        24 * 60,
+      );
     }
 
-    final newDurationMinutes = (newEndMinutes - newStartMinutes).clamp(_minDurationMinutes, 24 * 60);
+    final newDurationMinutes = (newEndMinutes - newStartMinutes).clamp(
+      _minDurationMinutes,
+      24 * 60,
+    );
     final newTop = (newStartMinutes / 60) * hourHeight;
     final newHeight = (newDurationMinutes / 60) * hourHeight;
 
@@ -319,11 +499,17 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     }
 
     final newStartMinutes = ((_dragPreviewTop! / hourHeight) * 60).round();
-    final newDurationMinutes = ((_dragPreviewHeight! / hourHeight) * 60).round();
+    final newDurationMinutes =
+        ((_dragPreviewHeight! / hourHeight) * 60).round();
 
-    final snappedStartMinutes = _snapMinutesToGrid(newStartMinutes, clampToEndOfDay: false);
+    final snappedStartMinutes = _snapMinutesToGrid(
+      newStartMinutes,
+      clampToEndOfDay: false,
+    );
     final snappedDurationMinutes =
-        ((newDurationMinutes / _snapMinutes).round() * _snapMinutes).clamp(_minDurationMinutes, 24 * 60).toInt();
+        ((newDurationMinutes / _snapMinutes).round() * _snapMinutes)
+            .clamp(_minDurationMinutes, 24 * 60)
+            .toInt();
 
     final baseDate = widget.weekStart.add(Duration(days: _resizeDayIndex!));
     final newStart = DateTime(
@@ -359,24 +545,34 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     widget.onEntryMoved(entry, newStart, snappedDurationMinutes);
   }
 
-  Widget _buildDayHeader(double dayWidth, List<TimeEntry> entries) {
+  Widget _buildDayHeader(
+    double dayWidth,
+    List<TimeEntry> entries,
+    double daysGridWidth,
+  ) {
     final today = DateTime.now();
-    return Container(
-      padding: EdgeInsets.only(left: timeColumnWidth),
-      decoration: const BoxDecoration(
-        color: AppTheme.surfaceDark,
-        border: Border(bottom: BorderSide(color: AppTheme.borderDark)),
-      ),
+    return SizedBox(
+      width: daysGridWidth,
       child: Row(
         children: List.generate(7, (index) {
           final day = widget.weekStart.add(Duration(days: index));
-          final isToday = day.year == today.year && day.month == today.month && day.day == today.day;
+          final isToday =
+              day.year == today.year &&
+              day.month == today.month &&
+              day.day == today.day;
 
           final dayEntries = entries.where((e) {
-            final entryStart = e.startTime ?? e.createdAt.subtract(Duration(minutes: e.durationMinutes));
-            return entryStart.year == day.year && entryStart.month == day.month && entryStart.day == day.day;
+            final entryStart =
+                e.startTime ??
+                e.createdAt.subtract(Duration(minutes: e.durationMinutes));
+            return entryStart.year == day.year &&
+                entryStart.month == day.month &&
+                entryStart.day == day.day;
           });
-          final totalMinutes = dayEntries.fold(0, (sum, e) => sum + e.durationMinutes);
+          final totalMinutes = dayEntries.fold(
+            0,
+            (sum, e) => sum + e.durationMinutes,
+          );
           final hoursPart = totalMinutes ~/ 60;
           final minutesPart = totalMinutes % 60;
           final durationLabel =
@@ -388,39 +584,49 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
           return Container(
             width: dayWidth,
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 4),
             alignment: Alignment.center,
             child: Column(
               children: [
                 Text(
                   DateFormat('E').format(day).toUpperCase(),
                   style: TextStyle(
-                    fontSize: 10,
-                    color: isToday ? AppTheme.primaryAccent : AppTheme.textMuted,
+                    fontSize: 9,
+                    color:
+                        isToday ? AppTheme.primaryAccent : AppTheme.textMuted,
                     fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(4),
                   decoration:
-                      isToday ? const BoxDecoration(color: AppTheme.primaryAccent, shape: BoxShape.circle) : null,
+                      isToday
+                          ? const BoxDecoration(
+                            color: AppTheme.primaryAccent,
+                            shape: BoxShape.circle,
+                          )
+                          : null,
                   child: Text(
                     day.day.toString(),
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: isToday ? Colors.white : AppTheme.textPrimary,
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   durationLabel,
                   style: TextStyle(
-                    fontSize: 9,
-                    color: totalMinutes > 0 ? AppTheme.textSecondary : AppTheme.textMuted,
-                    fontWeight: totalMinutes > 0 ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 8,
+                    color:
+                        totalMinutes > 0
+                            ? AppTheme.textSecondary
+                            : AppTheme.textMuted,
+                    fontWeight:
+                        totalMinutes > 0 ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ],
@@ -431,7 +637,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     );
   }
 
-  Widget _buildGrid(double dayWidth) {
+  Widget _buildGrid(double dayWidth, double daysGridWidth) {
     return Stack(
       children: [
         // Horizontal hour lines
@@ -442,50 +648,40 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
             left: 0,
             right: 0,
             child: Container(
+              width: daysGridWidth,
               height: hourHeight,
               decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppTheme.borderDark, width: 0.5)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: timeColumnWidth,
-                    alignment: Alignment.topRight,
-                    padding: const EdgeInsets.only(right: 8, top: 2),
-                    child: Text(
-                      '${hour.toString().padLeft(2, '0')}:00',
-                      style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
-                    ),
-                  ),
-                  ...List.generate(
-                    7,
-                    (dayIndex) => Expanded(
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          border: Border(left: BorderSide(color: AppTheme.borderDark, width: 0.5)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                border: Border(
+                  bottom: BorderSide(color: AppTheme.borderDark, width: 0.5),
+                ),
               ),
             ),
+          ),
+        ),
+        ...List.generate(
+          8,
+          (index) => Positioned(
+            top: 0,
+            bottom: 0,
+            left: index * dayWidth,
+            child: Container(width: 0.5, color: AppTheme.borderDark),
           ),
         ),
 
         // Vertical DragTargets (full height)
         Positioned.fill(
-          left: timeColumnWidth,
           child: Row(
             children: List.generate(
               7,
-              (dayIndex) => Expanded(
+              (dayIndex) => SizedBox(
+                width: dayWidth,
                 child: DragTarget<TimeEntry>(
                   onWillAcceptWithDetails: (_) => true,
                   onAcceptWithDetails: (details) {
                     final gridContext = _gridKey.currentContext;
                     if (gridContext == null) return;
-                    final RenderBox gridBox = gridContext.findRenderObject() as RenderBox;
+                    final RenderBox gridBox =
+                        gridContext.findRenderObject() as RenderBox;
                     final localOffset = gridBox.globalToLocal(details.offset);
                     // localOffset is already in the scroll content coordinate space,
                     // so adding scroll offset here would double-count it.
@@ -493,14 +689,29 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
                     final minutesInDay = 24 * 60;
                     final rawMinutes = (topInStack / hourHeight) * 60;
-                    final snappedMinutes = ((rawMinutes / 15).round() * 15).clamp(0, minutesInDay - 15).toInt();
+                    final snappedMinutes =
+                        ((rawMinutes / 15).round() * 15)
+                            .clamp(0, minutesInDay - 15)
+                            .toInt();
                     final h = snappedMinutes ~/ 60;
                     final m = snappedMinutes % 60;
 
-                    final baseDate = widget.weekStart.add(Duration(days: dayIndex));
-                    final newStart = DateTime(baseDate.year, baseDate.month, baseDate.day, h, m);
+                    final baseDate = widget.weekStart.add(
+                      Duration(days: dayIndex),
+                    );
+                    final newStart = DateTime(
+                      baseDate.year,
+                      baseDate.month,
+                      baseDate.day,
+                      h,
+                      m,
+                    );
                     final updatedEntry = details.data.copyWith(
-                      date: DateTime(newStart.year, newStart.month, newStart.day),
+                      date: DateTime(
+                        newStart.year,
+                        newStart.month,
+                        newStart.day,
+                      ),
                       startTime: newStart,
                     );
                     _setOptimisticEntry(updatedEntry);
@@ -519,14 +730,28 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                           _lastTapPosition = details.globalPosition;
                         },
                         onTapUp: (details) {
-                          final tapPos = details.localPosition.dy; // Relative to the full-height DragTarget
+                          final tapPos =
+                              details
+                                  .localPosition
+                                  .dy; // Relative to the full-height DragTarget
                           final totalMinutes = (tapPos / hourHeight) * 60;
                           final h = (totalMinutes / 60).floor();
                           final m = ((totalMinutes % 60) / 15).floor() * 15;
-                          final baseDate = widget.weekStart.add(Duration(days: dayIndex));
-                          final startTime = DateTime(baseDate.year, baseDate.month, baseDate.day, h, m);
-                          final RenderBox box = context.findRenderObject() as RenderBox;
-                          final anchoredTapPosition = box.localToGlobal(Offset(dayWidth * 0.75, tapPos));
+                          final baseDate = widget.weekStart.add(
+                            Duration(days: dayIndex),
+                          );
+                          final startTime = DateTime(
+                            baseDate.year,
+                            baseDate.month,
+                            baseDate.day,
+                            h,
+                            m,
+                          );
+                          final RenderBox box =
+                              context.findRenderObject() as RenderBox;
+                          final anchoredTapPosition = box.localToGlobal(
+                            Offset(dayWidth * 0.75, tapPos),
+                          );
                           widget.onSlotTap(
                             startTime,
                             startTime.add(const Duration(minutes: 30)),
@@ -535,10 +760,15 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                           );
                         },
                         onVerticalDragStart: (details) {
-                          final tapPos = details.localPosition.dy; // Relative to the full-height DragTarget
+                          final tapPos =
+                              details
+                                  .localPosition
+                                  .dy; // Relative to the full-height DragTarget
                           final totalMinutes = (tapPos / hourHeight) * 60;
                           final m = (totalMinutes / 15).floor() * 15;
-                          final baseDate = widget.weekStart.add(Duration(days: dayIndex));
+                          final baseDate = widget.weekStart.add(
+                            Duration(days: dayIndex),
+                          );
                           setState(() {
                             _selectionDayIndex = dayIndex;
                             _selectionStart = DateTime(
@@ -546,15 +776,22 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                               baseDate.month,
                               baseDate.day,
                             ).add(Duration(minutes: m));
-                            _selectionEnd = _selectionStart!.add(const Duration(minutes: 15));
+                            _selectionEnd = _selectionStart!.add(
+                              const Duration(minutes: 15),
+                            );
                           });
                         },
                         onVerticalDragUpdate: (details) {
                           if (_selectionStart == null) return;
-                          final localPos = details.localPosition.dy; // Relative to the full-height DragTarget
+                          final localPos =
+                              details
+                                  .localPosition
+                                  .dy; // Relative to the full-height DragTarget
                           final totalMinutes = (localPos / hourHeight) * 60;
                           final m = (totalMinutes / 15).round() * 15;
-                          final baseDate = widget.weekStart.add(Duration(days: dayIndex));
+                          final baseDate = widget.weekStart.add(
+                            Duration(days: dayIndex),
+                          );
                           final currentSelectionEnd = DateTime(
                             baseDate.year,
                             baseDate.month,
@@ -565,20 +802,33 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                           }
                         },
                         onVerticalDragEnd: (details) {
-                          if (_selectionStart != null && _selectionEnd != null) {
+                          if (_selectionStart != null &&
+                              _selectionEnd != null) {
                             final s = _selectionStart!;
                             final e = _selectionEnd!;
-                            final selectionEndMinutes = (e.hour * 60) + e.minute;
-                            final selectionEndDy = (selectionEndMinutes / 60) * hourHeight;
-                            final RenderBox box = context.findRenderObject() as RenderBox;
-                            final anchoredTapPosition = box.localToGlobal(Offset(dayWidth * 0.75, selectionEndDy));
-                            widget.onSlotTap(s, e, anchoredTapPosition, _clearSelection);
+                            final selectionEndMinutes =
+                                (e.hour * 60) + e.minute;
+                            final selectionEndDy =
+                                (selectionEndMinutes / 60) * hourHeight;
+                            final RenderBox box =
+                                context.findRenderObject() as RenderBox;
+                            final anchoredTapPosition = box.localToGlobal(
+                              Offset(dayWidth * 0.75, selectionEndDy),
+                            );
+                            widget.onSlotTap(
+                              s,
+                              e,
+                              anchoredTapPosition,
+                              _clearSelection,
+                            );
                           }
                         },
                         child: Container(
                           color:
                               candidateData.isNotEmpty
-                                  ? AppTheme.primaryAccent.withValues(alpha: 0.1)
+                                  ? AppTheme.primaryAccent.withValues(
+                                    alpha: 0.1,
+                                  )
                                   : Colors.transparent,
                         ),
                       ),
@@ -594,10 +844,15 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   Widget _buildSelectionBlock(double dayWidth) {
     final selectionStart = _selectionStart!;
     final selectionEnd = _selectionEnd!;
-    final top = (selectionStart.hour * hourHeight) + (selectionStart.minute / 60 * hourHeight);
+    final top =
+        (selectionStart.hour * hourHeight) +
+        (selectionStart.minute / 60 * hourHeight);
     final durationMinutes = selectionEnd.difference(selectionStart).inMinutes;
-    final height = (durationMinutes / 60 * hourHeight).clamp(15.0, double.infinity);
-    final left = timeColumnWidth + (_selectionDayIndex! * dayWidth);
+    final height = (durationMinutes / 60 * hourHeight).clamp(
+      15.0,
+      double.infinity,
+    );
+    final left = _selectionDayIndex! * dayWidth;
     final startLabel = DateFormat.Hm().format(selectionStart);
     final endLabel = DateFormat.Hm().format(selectionEnd);
     final durationHours = durationMinutes ~/ 60;
@@ -629,7 +884,9 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                 decoration: BoxDecoration(
                   color: AppTheme.primaryDark.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppTheme.primaryAccent.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: AppTheme.primaryAccent.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -637,12 +894,20 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                   children: [
                     Text(
                       '$startLabel – $endLabel',
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 11, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       durationLabel,
-                      style: const TextStyle(color: AppTheme.primaryAccent, fontSize: 11, fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                        color: AppTheme.primaryAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
@@ -656,10 +921,16 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
   Widget _buildDragPreview(double dayWidth) {
     final entry = _draggingEntry!;
-    final Project? project = entry.projectId != null ? widget.getProjectById(entry.projectId!) : null;
-    final color = project != null ? AppTheme.colorFromHex(project.color) : AppTheme.primaryAccent;
+    final Project? project =
+        entry.projectId != null
+            ? widget.getProjectById(entry.projectId!)
+            : null;
+    final color =
+        project != null
+            ? AppTheme.colorFromHex(project.color)
+            : AppTheme.primaryAccent;
 
-    final left = timeColumnWidth + (_dragPreviewDayIndex! * dayWidth);
+    final left = _dragPreviewDayIndex! * dayWidth;
 
     return Positioned(
       top: _dragPreviewTop,
@@ -680,12 +951,21 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
   }
 
   Widget _buildEntryBlock(TimeEntry entry, double dayWidth) {
-    final Project? project = entry.projectId != null ? widget.getProjectById(entry.projectId!) : null;
-    final color = project != null ? AppTheme.colorFromHex(project.color) : AppTheme.primaryAccent;
+    final Project? project =
+        entry.projectId != null
+            ? widget.getProjectById(entry.projectId!)
+            : null;
+    final color =
+        project != null
+            ? AppTheme.colorFromHex(project.color)
+            : AppTheme.primaryAccent;
 
-    final entryStart = entry.startTime ?? entry.createdAt.subtract(Duration(minutes: entry.durationMinutes));
+    final entryStart =
+        entry.startTime ??
+        entry.createdAt.subtract(Duration(minutes: entry.durationMinutes));
 
-    if (entryStart.isBefore(widget.weekStart) || entryStart.isAfter(widget.weekStart.add(const Duration(days: 7)))) {
+    if (entryStart.isBefore(widget.weekStart) ||
+        entryStart.isAfter(widget.weekStart.add(const Duration(days: 7)))) {
       return const SizedBox.shrink();
     }
 
@@ -693,18 +973,91 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     if (dayIndex < 0 || dayIndex >= 7) return const SizedBox.shrink();
     final isResizingThisEntry = _resizingEntryId == entry.id;
 
-    final top = (entryStart.hour * hourHeight) + (entryStart.minute / 60 * hourHeight);
-    final height = (entry.durationMinutes / 60 * hourHeight).clamp(20.0, double.infinity);
-    final left = timeColumnWidth + (dayIndex * dayWidth);
+    final top =
+        (entryStart.hour * hourHeight) + (entryStart.minute / 60 * hourHeight);
+    final height = (entry.durationMinutes / 60 * hourHeight).clamp(
+      20.0,
+      double.infinity,
+    );
 
-    final isSelectionActive = _selectionStart != null || _resizingEntryId != null;
-    final isFocused = _resizingEntryId == entry.id || _draggingEntry?.id == entry.id;
+    final entryEnd = entryStart.add(Duration(minutes: entry.durationMinutes));
+    final dayEntries =
+        _displayEntries.where((candidate) {
+            final start =
+                candidate.startTime ??
+                candidate.createdAt.subtract(
+                  Duration(minutes: candidate.durationMinutes),
+                );
+            return start.year == entryStart.year &&
+                start.month == entryStart.month &&
+                start.day == entryStart.day;
+          }).toList()
+          ..sort((a, b) {
+            final sa =
+                a.startTime ??
+                a.createdAt.subtract(Duration(minutes: a.durationMinutes));
+            final sb =
+                b.startTime ??
+                b.createdAt.subtract(Duration(minutes: b.durationMinutes));
+            return sa.compareTo(sb);
+          });
+
+    final overlapGroup =
+        dayEntries.where((candidate) {
+          final start =
+              candidate.startTime ??
+              candidate.createdAt.subtract(
+                Duration(minutes: candidate.durationMinutes),
+              );
+          final end = start.add(Duration(minutes: candidate.durationMinutes));
+          return entryStart.isBefore(end) && entryEnd.isAfter(start);
+        }).toList();
+
+    final laneEnds = <int>[];
+    var laneForEntry = 0;
+    for (final candidate in overlapGroup) {
+      final start =
+          candidate.startTime ??
+          candidate.createdAt.subtract(
+            Duration(minutes: candidate.durationMinutes),
+          );
+      final end = start.add(Duration(minutes: candidate.durationMinutes));
+      final startMin = (start.hour * 60) + start.minute;
+      final endMin = (end.hour * 60) + end.minute;
+
+      var lane = -1;
+      for (var i = 0; i < laneEnds.length; i++) {
+        if (laneEnds[i] <= startMin) {
+          lane = i;
+          break;
+        }
+      }
+      if (lane == -1) {
+        lane = laneEnds.length;
+        laneEnds.add(endMin);
+      } else {
+        laneEnds[lane] = endMin;
+      }
+      if (candidate.id == entry.id) {
+        laneForEntry = lane;
+      }
+    }
+
+    final totalLanes = laneEnds.isEmpty ? 1 : laneEnds.length.clamp(1, 4);
+    final laneWidth = dayWidth / totalLanes;
+    final left = (dayIndex * dayWidth) + (laneForEntry * laneWidth);
+    final tileWidth = (laneWidth - 2).clamp(24.0, dayWidth);
+
+    final isSelectionActive =
+        _selectionStart != null || _resizingEntryId != null;
+    final isFocused =
+        _resizingEntryId == entry.id || _draggingEntry?.id == entry.id;
     final opacity = (isSelectionActive && !isFocused) ? 0.25 : 1.0;
 
     return Positioned(
       top: top,
       left: left,
-      width: dayWidth,
+      width: tileWidth,
       height: height,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
@@ -715,10 +1068,11 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
           dragAnchorStrategy: pointerDragAnchorStrategy,
           onDragStarted: () {
             final entryTopMinutes = (entryStart.hour * 60) + entryStart.minute;
-            final snappedStartMinutes = ((entryTopMinutes / _snapMinutes).floor() * _snapMinutes).clamp(
-              0,
-              (24 * 60) - _snapMinutes,
-            );
+            final snappedStartMinutes =
+                ((entryTopMinutes / _snapMinutes).floor() * _snapMinutes).clamp(
+                  0,
+                  (24 * 60) - _snapMinutes,
+                );
             final snappedTop = (snappedStartMinutes / 60) * hourHeight;
             setState(() {
               _draggingEntry = entry;
@@ -729,7 +1083,10 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
           },
           onDragUpdate: (details) {
             if (_draggingEntry == null) return;
-            _updateDragPreviewFromGlobalOffset(details.globalPosition, dayWidth);
+            _updateDragPreviewFromGlobalOffset(
+              details.globalPosition,
+              dayWidth,
+            );
           },
           onDragEnd: (details) {
             if (!details.wasAccepted) {
@@ -751,14 +1108,23 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
               _dragCursorLocalPosition = null;
             });
           },
-          feedback: const Material(color: Colors.transparent, child: SizedBox.shrink()),
+          feedback: const Material(
+            color: Colors.transparent,
+            child: SizedBox.shrink(),
+          ),
           childWhenDragging: const SizedBox.shrink(),
           child: GestureDetector(
             // Trigger the dialog on a clean tap (not a drag)
-            onTap: isResizingThisEntry ? null : () => widget.onEntryTap(entry, _lastTapPosition),
+            onTap:
+                isResizingThisEntry
+                    ? null
+                    : () => widget.onEntryTap(entry, _lastTapPosition),
             onTapDown: (details) {
               // Anchor the dialog slightly to the right of the tap to avoid covering the entry.
-              _lastTapPosition = details.globalPosition.translate(dayWidth * 0.25, 0);
+              _lastTapPosition = details.globalPosition.translate(
+                dayWidth * 0.25,
+                0,
+              );
               setState(() {
                 // Use the local position within the entry block as the grab offset.
                 _dragGrabYOffset = details.localPosition.dy;
@@ -767,13 +1133,15 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
             child: Container(
               margin: const EdgeInsets.all(1),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: isResizingThisEntry ? 0.06 : 0.2),
-                borderRadius: BorderRadius.circular(4),
+                color: color.withValues(
+                  alpha: isResizingThisEntry ? 0.06 : 0.2,
+                ),
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Stack(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(6),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         const descriptionStyle = TextStyle(
@@ -782,15 +1150,23 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                           color: Colors.white,
                           height: 1.2,
                         );
-                        const durationStyle = TextStyle(fontSize: 10.5, height: 1.2);
+                        const durationStyle = TextStyle(
+                          fontSize: 10.5,
+                          height: 1.2,
+                        );
 
                         final availableHeight = constraints.maxHeight;
                         final durationLineHeight = 9 * 1.2;
                         final descriptionLineHeight = 10 * 1.2;
 
                         final shouldShowDuration = availableHeight >= 28;
-                        final spaceForDescription = availableHeight - (shouldShowDuration ? durationLineHeight + 2 : 0);
-                        final maxLines = (spaceForDescription / descriptionLineHeight).floor().clamp(1, 10);
+                        final spaceForDescription =
+                            availableHeight -
+                            (shouldShowDuration ? durationLineHeight + 2 : 0);
+                        final maxLines = (spaceForDescription /
+                                descriptionLineHeight)
+                            .floor()
+                            .clamp(1, 2);
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -806,9 +1182,24 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
                                 ),
                               ),
                             if (shouldShowDuration)
-                              Text(
-                                entry.formattedDuration,
-                                style: durationStyle.copyWith(color: Colors.white.withValues(alpha: 0.8)),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.schedule,
+                                    size: 10,
+                                    color: Colors.white.withValues(alpha: 0.75),
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    entry.formattedDuration,
+                                    style: durationStyle.copyWith(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                           ],
                         );
@@ -885,7 +1276,8 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
 
   Widget _buildCurrentTimeIndicator(double dayWidth) {
     final now = DateTime.now();
-    if (now.isBefore(widget.weekStart) || now.isAfter(widget.weekStart.add(const Duration(days: 7)))) {
+    if (now.isBefore(widget.weekStart) ||
+        now.isAfter(widget.weekStart.add(const Duration(days: 7)))) {
       return const SizedBox.shrink();
     }
 
@@ -893,7 +1285,7 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     if (dayIndex < 0 || dayIndex >= 7) return const SizedBox.shrink();
 
     final top = (now.hour * hourHeight) + (now.minute / 60 * hourHeight);
-    final left = timeColumnWidth + (dayIndex * dayWidth);
+    final left = dayIndex * dayWidth;
 
     return Positioned(
       top: top,
@@ -901,7 +1293,14 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
       width: dayWidth,
       child: Row(
         children: [
-          Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+            ),
+          ),
           Expanded(child: Container(height: 1, color: Colors.red)),
         ],
       ),
@@ -922,7 +1321,8 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     final snappedMinutes = ((anchorMinutes / 15).round() * 15).toInt();
     final h = (snappedMinutes ~/ 60).clamp(0, 23);
     final m = (snappedMinutes % 60).clamp(0, 59);
-    final timeLabel = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+    final timeLabel =
+        '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 
     final dx = _dragCursorLocalPosition!.dx + 12;
     final dy = _dragCursorLocalPosition!.dy - 28;
@@ -940,7 +1340,11 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
           ),
           child: Text(
             timeLabel,
-            style: const TextStyle(color: AppTheme.primaryAccent, fontSize: 12, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              color: AppTheme.primaryAccent,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ),
@@ -954,7 +1358,8 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
     final snappedMinutes = ((totalMinutes / 15).round() * 15).toInt();
     final h = (snappedMinutes ~/ 60).clamp(0, 23);
     final m = (snappedMinutes % 60).clamp(0, 59);
-    final timeLabel = '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
+    final timeLabel =
+        '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 
     String? durationLabel;
     if (_selectionStart != null && _selectionEnd != null) {
@@ -977,7 +1382,11 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppTheme.borderDark),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 5)),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
             ],
           ),
           child: Column(
@@ -986,13 +1395,21 @@ class _VisualWeeklyCalendarState extends State<VisualWeeklyCalendar> {
             children: [
               Text(
                 timeLabel,
-                style: const TextStyle(color: AppTheme.primaryAccent, fontSize: 12, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  color: AppTheme.primaryAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               if (durationLabel != null) ...[
                 const SizedBox(height: 2),
                 Text(
                   durationLabel,
-                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ],

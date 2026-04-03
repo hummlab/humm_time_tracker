@@ -11,7 +11,8 @@ import 'package:time_tracker/models/time/time_entry.dart';
 import 'weekly_calendar_state.dart';
 
 class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
-  WeeklyCalendarCubit(this._timeDataProvider, this._authDataProvider) : super(WeeklyCalendarState.initial()) {
+  WeeklyCalendarCubit(this._timeDataProvider, this._authDataProvider)
+    : super(WeeklyCalendarState.initial()) {
     _timeDataProvider.addListener(_syncFromProvider);
     _authDataProvider.addListener(_syncFromProvider);
     _syncFromProvider();
@@ -22,7 +23,9 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
 
   DateTime _normalizeWeekStart(DateTime date) {
     final normalizedDate = DateTime(date.year, date.month, date.day);
-    final monday = normalizedDate.subtract(Duration(days: normalizedDate.weekday - 1));
+    final monday = normalizedDate.subtract(
+      Duration(days: normalizedDate.weekday - 1),
+    );
     return DateTime(monday.year, monday.month, monday.day);
   }
 
@@ -46,17 +49,27 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
 
     final totalMinutes = entries.fold(0, (sum, e) => sum + e.durationMinutes);
 
-    emit(state.copyWith(weekEntries: entries, weekTotalMinutes: totalMinutes, currentUserId: currentUserId));
+    emit(
+      state.copyWith(
+        weekEntries: entries,
+        weekTotalMinutes: totalMinutes,
+        currentUserId: currentUserId,
+      ),
+    );
   }
 
   void previousWeek() {
-    final newStart = _normalizeWeekStart(state.weekStart.subtract(const Duration(days: 7)));
+    final newStart = _normalizeWeekStart(
+      state.weekStart.subtract(const Duration(days: 7)),
+    );
     emit(state.copyWith(weekStart: newStart));
     _syncFromProvider();
   }
 
   void nextWeek() {
-    final newStart = _normalizeWeekStart(state.weekStart.add(const Duration(days: 7)));
+    final newStart = _normalizeWeekStart(
+      state.weekStart.add(const Duration(days: 7)),
+    );
     emit(state.copyWith(weekStart: newStart));
     _syncFromProvider();
   }
@@ -72,9 +85,18 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   }
 
   void deleteTimeEntry(String id) {
-    final updatedWeekEntries = state.weekEntries.where((entry) => entry.id != id).toList();
-    final weekTotalMinutes = updatedWeekEntries.fold<int>(0, (sum, e) => sum + e.durationMinutes);
-    emit(state.copyWith(weekEntries: updatedWeekEntries, weekTotalMinutes: weekTotalMinutes));
+    final updatedWeekEntries =
+        state.weekEntries.where((entry) => entry.id != id).toList();
+    final weekTotalMinutes = updatedWeekEntries.fold<int>(
+      0,
+      (sum, e) => sum + e.durationMinutes,
+    );
+    emit(
+      state.copyWith(
+        weekEntries: updatedWeekEntries,
+        weekTotalMinutes: weekTotalMinutes,
+      ),
+    );
 
     unawaited(_timeDataProvider.deleteTimeEntry(id));
   }
@@ -101,8 +123,16 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
         startTime: startTime,
       );
       final updatedWeekEntries = [...state.weekEntries, optimisticEntry];
-      final weekTotalMinutes = updatedWeekEntries.fold<int>(0, (sum, e) => sum + e.durationMinutes);
-      emit(state.copyWith(weekEntries: updatedWeekEntries, weekTotalMinutes: weekTotalMinutes));
+      final weekTotalMinutes = updatedWeekEntries.fold<int>(
+        0,
+        (sum, e) => sum + e.durationMinutes,
+      );
+      emit(
+        state.copyWith(
+          weekEntries: updatedWeekEntries,
+          weekTotalMinutes: weekTotalMinutes,
+        ),
+      );
     }
 
     unawaited(
@@ -137,9 +167,12 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
       final entryStart = entry.startTime ?? entry.date;
       final entryEnd = entryStart.add(Duration(minutes: entry.durationMinutes));
       final candidateStart = candidate.startTime ?? candidate.date;
-      final candidateEnd = candidateStart.add(Duration(minutes: candidate.durationMinutes));
+      final candidateEnd = candidateStart.add(
+        Duration(minutes: candidate.durationMinutes),
+      );
 
-      if (candidateStart.isBefore(entryEnd) && candidateEnd.isAfter(entryStart)) {
+      if (candidateStart.isBefore(entryEnd) &&
+          candidateEnd.isAfter(entryStart)) {
         return true;
       }
     }
@@ -150,7 +183,8 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
   TimeDataProvider get timeDataProvider => _timeDataProvider;
 
   List<Project> get projects {
-    final TeamMember? currentMember = _timeDataProvider.getCurrentUserTeamMember();
+    final TeamMember? currentMember =
+        _timeDataProvider.getCurrentUserTeamMember();
     return _timeDataProvider.getProjectsForUser(
       hasManagerAccess: _authDataProvider.hasManagerAccess,
       teamMemberId: currentMember?.id,
@@ -176,8 +210,18 @@ class WeeklyCalendarCubit extends BaseCubit<WeeklyCalendarState> {
 
   void _applyOptimisticEntryUpdate(TimeEntry updatedEntry) {
     final updatedWeekEntries =
-        state.weekEntries.map((entry) => entry.id == updatedEntry.id ? updatedEntry : entry).toList();
-    final weekTotalMinutes = updatedWeekEntries.fold<int>(0, (sum, e) => sum + e.durationMinutes);
-    emit(state.copyWith(weekEntries: updatedWeekEntries, weekTotalMinutes: weekTotalMinutes));
+        state.weekEntries
+            .map((entry) => entry.id == updatedEntry.id ? updatedEntry : entry)
+            .toList();
+    final weekTotalMinutes = updatedWeekEntries.fold<int>(
+      0,
+      (sum, e) => sum + e.durationMinutes,
+    );
+    emit(
+      state.copyWith(
+        weekEntries: updatedWeekEntries,
+        weekTotalMinutes: weekTotalMinutes,
+      ),
+    );
   }
 }

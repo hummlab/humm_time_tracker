@@ -5,7 +5,12 @@ class ProjectDropdown extends StatefulWidget {
   final List<Project> projects;
   final Function(String?) onChanged;
 
-  const ProjectDropdown({super.key, this.selectedProjectId, required this.projects, required this.onChanged});
+  const ProjectDropdown({
+    super.key,
+    this.selectedProjectId,
+    required this.projects,
+    required this.onChanged,
+  });
 
   @override
   State<ProjectDropdown> createState() => _ProjectDropdownState();
@@ -86,7 +91,9 @@ class _ProjectDropdownState extends State<ProjectDropdown> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder:
           (context) => _MobileProjectPicker(
             projects: widget.projects,
@@ -110,7 +117,9 @@ class _ProjectDropdownState extends State<ProjectDropdown> {
   Widget build(BuildContext context) {
     final selectedProject =
         widget.selectedProjectId != null
-            ? widget.projects.where((p) => p.id == widget.selectedProjectId).firstOrNull
+            ? widget.projects
+                .where((p) => p.id == widget.selectedProjectId)
+                .firstOrNull
             : null;
 
     return CompositedTransformTarget(
@@ -118,11 +127,14 @@ class _ProjectDropdownState extends State<ProjectDropdown> {
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceDark,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark),
+            border: Border(
+              bottom: BorderSide(
+                color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark,
+              ),
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
           ),
           child: Row(
             children: [
@@ -140,11 +152,20 @@ class _ProjectDropdownState extends State<ProjectDropdown> {
               Expanded(
                 child: Text(
                   selectedProject?.name ?? 'Select project',
-                  style: TextStyle(color: selectedProject != null ? AppTheme.textPrimary : AppTheme.textMuted),
+                  style: TextStyle(
+                    color:
+                        selectedProject != null
+                            ? AppTheme.textPrimary
+                            : AppTheme.textMuted,
+                    fontSize: 13,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: AppTheme.textMuted),
+              Icon(
+                _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: AppTheme.textMuted,
+              ),
             ],
           ),
         ),
@@ -159,7 +180,11 @@ class _DesktopProjectPicker extends StatefulWidget {
   final String? selectedProjectId;
   final Function(String?) onSelected;
 
-  const _DesktopProjectPicker({required this.projects, this.selectedProjectId, required this.onSelected});
+  const _DesktopProjectPicker({
+    required this.projects,
+    this.selectedProjectId,
+    required this.onSelected,
+  });
 
   @override
   State<_DesktopProjectPicker> createState() => _DesktopProjectPickerState();
@@ -188,7 +213,13 @@ class _DesktopProjectPickerState extends State<_DesktopProjectPicker> {
         color: AppTheme.cardDark,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.borderDark),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -201,7 +232,10 @@ class _DesktopProjectPickerState extends State<_DesktopProjectPicker> {
                 hintText: 'Search projects...',
                 prefixIcon: const Icon(Icons.search, size: 20),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
               onChanged: (value) {
                 setState(() => _searchQuery = value);
@@ -215,7 +249,13 @@ class _DesktopProjectPickerState extends State<_DesktopProjectPicker> {
               padding: const EdgeInsets.symmetric(vertical: 4),
               children: [
                 _buildProjectItem(null, 'No project', null),
-                ...filteredProjects.map((project) => _buildProjectItem(project.id, project.name, project.color)),
+                ...filteredProjects.map(
+                  (project) => _buildProjectItem(
+                    project.id,
+                    project.name,
+                    project.color,
+                  ),
+                ),
               ],
             ),
           ),
@@ -230,30 +270,42 @@ class _DesktopProjectPickerState extends State<_DesktopProjectPicker> {
       onTap: () => widget.onSelected(id),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        color: isSelected ? AppTheme.primaryAccent.withValues(alpha: 0.1) : null,
+        color:
+            isSelected ? AppTheme.primaryAccent.withValues(alpha: 0.1) : null,
         child: Row(
           children: [
             if (color != null) ...[
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(color: AppTheme.colorFromHex(color), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: AppTheme.colorFromHex(color),
+                  shape: BoxShape.circle,
+                ),
               ),
               const SizedBox(width: 10),
             ] else ...[
-              const Icon(Icons.remove_circle_outline, size: 12, color: AppTheme.textMuted),
+              const Icon(
+                Icons.remove_circle_outline,
+                size: 12,
+                color: AppTheme.textMuted,
+              ),
               const SizedBox(width: 10),
             ],
             Expanded(
               child: Text(
                 name,
                 style: TextStyle(
-                  color: isSelected ? AppTheme.primaryAccent : AppTheme.textPrimary,
+                  color:
+                      isSelected
+                          ? AppTheme.primaryAccent
+                          : AppTheme.textPrimary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ),
-            if (isSelected) const Icon(Icons.check, size: 18, color: AppTheme.primaryAccent),
+            if (isSelected)
+              const Icon(Icons.check, size: 18, color: AppTheme.primaryAccent),
           ],
         ),
       ),
@@ -267,7 +319,11 @@ class _MobileProjectPicker extends StatefulWidget {
   final String? selectedProjectId;
   final Function(String?) onSelected;
 
-  const _MobileProjectPicker({required this.projects, this.selectedProjectId, required this.onSelected});
+  const _MobileProjectPicker({
+    required this.projects,
+    this.selectedProjectId,
+    required this.onSelected,
+  });
 
   @override
   State<_MobileProjectPicker> createState() => _MobileProjectPickerState();
@@ -297,9 +353,15 @@ class _MobileProjectPickerState extends State<_MobileProjectPicker> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Text('Select Project', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Select Project',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const Spacer(),
-              IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
             ],
           ),
         ),
@@ -326,7 +388,9 @@ class _MobileProjectPickerState extends State<_MobileProjectPicker> {
                 leading: const Icon(Icons.remove_circle_outline),
                 title: const Text('No project'),
                 trailing:
-                    widget.selectedProjectId == null ? const Icon(Icons.check, color: AppTheme.primaryAccent) : null,
+                    widget.selectedProjectId == null
+                        ? const Icon(Icons.check, color: AppTheme.primaryAccent)
+                        : null,
                 onTap: () => widget.onSelected(null),
               ),
               ...filteredProjects.map(
@@ -334,12 +398,18 @@ class _MobileProjectPickerState extends State<_MobileProjectPicker> {
                   leading: Container(
                     width: 16,
                     height: 16,
-                    decoration: BoxDecoration(color: AppTheme.colorFromHex(project.color), shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: AppTheme.colorFromHex(project.color),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                   title: Text(project.name),
                   trailing:
                       widget.selectedProjectId == project.id
-                          ? const Icon(Icons.check, color: AppTheme.primaryAccent)
+                          ? const Icon(
+                            Icons.check,
+                            color: AppTheme.primaryAccent,
+                          )
                           : null,
                   onTap: () => widget.onSelected(project.id),
                 ),

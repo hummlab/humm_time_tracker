@@ -20,7 +20,10 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = WeeklyCalendarCubit(AppDependencies.instance.timeDataProvider, AppDependencies.instance.authDataProvider);
+    _cubit = WeeklyCalendarCubit(
+      AppDependencies.instance.timeDataProvider,
+      AppDependencies.instance.authDataProvider,
+    );
   }
 
   @override
@@ -41,7 +44,11 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
             state.weekStart.month,
             state.weekStart.day,
           ).subtract(Duration(days: state.weekStart.weekday - 1));
-          final weekStart = DateTime(normalizedWeekStart.year, normalizedWeekStart.month, normalizedWeekStart.day);
+          final weekStart = DateTime(
+            normalizedWeekStart.year,
+            normalizedWeekStart.month,
+            normalizedWeekStart.day,
+          );
           final weekEnd = weekStart.add(const Duration(days: 7));
           final currentUserId = state.currentUserId;
 
@@ -50,12 +57,17 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                   .where(
                     (e) =>
                         e.createdByUserId == currentUserId &&
-                        e.date.isAfter(weekStart.subtract(const Duration(days: 1))) &&
+                        e.date.isAfter(
+                          weekStart.subtract(const Duration(days: 1)),
+                        ) &&
                         e.date.isBefore(weekEnd),
                   )
                   .toList();
 
-          final weekTotalMinutes = weekEntries.fold(0, (sum, e) => sum + e.durationMinutes);
+          final weekTotalMinutes = weekEntries.fold(
+            0,
+            (sum, e) => sum + e.durationMinutes,
+          );
           final weekHours = weekTotalMinutes ~/ 60;
           final weekMinutes = weekTotalMinutes % 60;
 
@@ -74,15 +86,16 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                   entries: weekEntries,
                   getProjectById: _cubit.getProjectById,
                   onSlotTap:
-                      (start, end, pos, clearSelection) => showWeeklyEntryDialog(
-                        context: context,
-                        cubit: _cubit,
-                        state: state,
-                        start: start,
-                        end: end,
-                        position: pos,
-                        onDialogClosed: clearSelection,
-                      ),
+                      (start, end, pos, clearSelection) =>
+                          showWeeklyEntryDialog(
+                            context: context,
+                            cubit: _cubit,
+                            state: state,
+                            start: start,
+                            end: end,
+                            position: pos,
+                            onDialogClosed: clearSelection,
+                          ),
                   onEntryTap:
                       (entry, pos) => showWeeklyEntryDialog(
                         context: context,
@@ -94,9 +107,14 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                         existingEntry: entry,
                       ),
                   onEntryMoved: (entry, newStart, [newDuration]) {
-                    final durationMinutes = newDuration ?? entry.durationMinutes;
+                    final durationMinutes =
+                        newDuration ?? entry.durationMinutes;
                     final candidateEntry = entry.copyWith(
-                      date: DateTime(newStart.year, newStart.month, newStart.day),
+                      date: DateTime(
+                        newStart.year,
+                        newStart.month,
+                        newStart.day,
+                      ),
                       startTime: newStart,
                       durationMinutes: durationMinutes,
                     );
@@ -104,7 +122,9 @@ class _WeeklyCalendarScreenState extends State<WeeklyCalendarScreen> {
                     if (_cubit.hasOverlap(candidateEntry)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Time entries cannot overlap on the same day.'),
+                          content: Text(
+                            'Time entries cannot overlap on the same day.',
+                          ),
                           duration: Duration(seconds: 2),
                         ),
                       );

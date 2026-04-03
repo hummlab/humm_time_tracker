@@ -67,7 +67,10 @@ extension ReportPeriodExtension on ReportPeriod {
         final lastMonthEnd = DateTime(now.year, now.month, 0);
         return DateTimeRange(start: lastMonth, end: lastMonthEnd);
       case ReportPeriod.custom:
-        return DateTimeRange(start: today.subtract(const Duration(days: 30)), end: today);
+        return DateTimeRange(
+          start: today.subtract(const Duration(days: 30)),
+          end: today,
+        );
     }
   }
 }
@@ -85,6 +88,8 @@ class ReportsState with _$ReportsState {
     required SortBy sortBy,
     required bool sortDescending,
     required List<TimeEntry> filteredEntries,
+    required int totalMatchingEntries,
+    required bool hasMoreEntries,
     required Map<String, int> minutesByProject,
     required int totalMinutes,
     required int uniqueDays,
@@ -94,6 +99,7 @@ class ReportsState with _$ReportsState {
     required List<Tag> tags,
     required bool canChangeMembers,
     required bool hasFilters,
+    required bool isLoading,
     String? toastMessage,
     AppToastType? toastType,
   }) = _ReportsState;
@@ -111,6 +117,8 @@ class ReportsState with _$ReportsState {
       sortBy: SortBy.date,
       sortDescending: true,
       filteredEntries: const [],
+      totalMatchingEntries: 0,
+      hasMoreEntries: false,
       minutesByProject: const {},
       totalMinutes: 0,
       uniqueDays: 0,
@@ -120,6 +128,7 @@ class ReportsState with _$ReportsState {
       tags: const [],
       canChangeMembers: false,
       hasFilters: false,
+      isLoading: false,
       toastMessage: null,
       toastType: null,
     );

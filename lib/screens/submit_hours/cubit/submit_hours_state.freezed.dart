@@ -20,11 +20,15 @@ mixin _$SubmitHoursState {
   List<TimeEntry> get draftEntries => throw _privateConstructorUsedError;
   List<TimeEntry> get pendingEntries => throw _privateConstructorUsedError;
   List<TimeEntry> get rejectedEntries => throw _privateConstructorUsedError;
-  List<SubmitHoursDateSection> get draftSections => throw _privateConstructorUsedError;
-  List<SubmitHoursDateSection> get pendingSections => throw _privateConstructorUsedError;
-  List<SubmitHoursDateSection> get rejectedSections => throw _privateConstructorUsedError;
+  List<SubmitHoursDateSection> get draftSections =>
+      throw _privateConstructorUsedError;
+  List<SubmitHoursDateSection> get pendingSections =>
+      throw _privateConstructorUsedError;
+  List<SubmitHoursDateSection> get rejectedSections =>
+      throw _privateConstructorUsedError;
   List<String> get selectedEntryIds => throw _privateConstructorUsedError;
-  SubmitHoursQuickSelectPeriod get activeQuickSelect => throw _privateConstructorUsedError;
+  SubmitHoursQuickSelectPeriod get activeQuickSelect =>
+      throw _privateConstructorUsedError;
   bool get isSubmitting => throw _privateConstructorUsedError;
   int get totalDraftMinutes => throw _privateConstructorUsedError;
   int get totalPendingMinutes => throw _privateConstructorUsedError;
@@ -36,13 +40,16 @@ mixin _$SubmitHoursState {
   /// Create a copy of SubmitHoursState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $SubmitHoursStateCopyWith<SubmitHoursState> get copyWith => throw _privateConstructorUsedError;
+  $SubmitHoursStateCopyWith<SubmitHoursState> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class $SubmitHoursStateCopyWith<$Res> {
-  factory $SubmitHoursStateCopyWith(SubmitHoursState value, $Res Function(SubmitHoursState) then) =
-      _$SubmitHoursStateCopyWithImpl<$Res, SubmitHoursState>;
+  factory $SubmitHoursStateCopyWith(
+    SubmitHoursState value,
+    $Res Function(SubmitHoursState) then,
+  ) = _$SubmitHoursStateCopyWithImpl<$Res, SubmitHoursState>;
   @useResult
   $Res call({
     List<TimeEntry> draftEntries,
@@ -64,7 +71,8 @@ abstract class $SubmitHoursStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$SubmitHoursStateCopyWithImpl<$Res, $Val extends SubmitHoursState> implements $SubmitHoursStateCopyWith<$Res> {
+class _$SubmitHoursStateCopyWithImpl<$Res, $Val extends SubmitHoursState>
+    implements $SubmitHoursStateCopyWith<$Res> {
   _$SubmitHoursStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
@@ -177,9 +185,12 @@ class _$SubmitHoursStateCopyWithImpl<$Res, $Val extends SubmitHoursState> implem
 }
 
 /// @nodoc
-abstract class _$$SubmitHoursStateImplCopyWith<$Res> implements $SubmitHoursStateCopyWith<$Res> {
-  factory _$$SubmitHoursStateImplCopyWith(_$SubmitHoursStateImpl value, $Res Function(_$SubmitHoursStateImpl) then) =
-      __$$SubmitHoursStateImplCopyWithImpl<$Res>;
+abstract class _$$SubmitHoursStateImplCopyWith<$Res>
+    implements $SubmitHoursStateCopyWith<$Res> {
+  factory _$$SubmitHoursStateImplCopyWith(
+    _$SubmitHoursStateImpl value,
+    $Res Function(_$SubmitHoursStateImpl) then,
+  ) = __$$SubmitHoursStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -202,10 +213,13 @@ abstract class _$$SubmitHoursStateImplCopyWith<$Res> implements $SubmitHoursStat
 }
 
 /// @nodoc
-class __$$SubmitHoursStateImplCopyWithImpl<$Res> extends _$SubmitHoursStateCopyWithImpl<$Res, _$SubmitHoursStateImpl>
+class __$$SubmitHoursStateImplCopyWithImpl<$Res>
+    extends _$SubmitHoursStateCopyWithImpl<$Res, _$SubmitHoursStateImpl>
     implements _$$SubmitHoursStateImplCopyWith<$Res> {
-  __$$SubmitHoursStateImplCopyWithImpl(_$SubmitHoursStateImpl _value, $Res Function(_$SubmitHoursStateImpl) _then)
-    : super(_value, _then);
+  __$$SubmitHoursStateImplCopyWithImpl(
+    _$SubmitHoursStateImpl _value,
+    $Res Function(_$SubmitHoursStateImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of SubmitHoursState
   /// with the given fields replaced by the non-null parameter values.
@@ -380,7 +394,8 @@ class _$SubmitHoursStateImpl implements _SubmitHoursState {
   final List<SubmitHoursDateSection> _rejectedSections;
   @override
   List<SubmitHoursDateSection> get rejectedSections {
-    if (_rejectedSections is EqualUnmodifiableListView) return _rejectedSections;
+    if (_rejectedSections is EqualUnmodifiableListView)
+      return _rejectedSections;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_rejectedSections);
   }
@@ -388,7 +403,8 @@ class _$SubmitHoursStateImpl implements _SubmitHoursState {
   final List<String> _selectedEntryIds;
   @override
   List<String> get selectedEntryIds {
-    if (_selectedEntryIds is EqualUnmodifiableListView) return _selectedEntryIds;
+    if (_selectedEntryIds is EqualUnmodifiableListView)
+      return _selectedEntryIds;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_selectedEntryIds);
   }
@@ -420,24 +436,50 @@ class _$SubmitHoursStateImpl implements _SubmitHoursState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$SubmitHoursStateImpl &&
-            const DeepCollectionEquality().equals(other._draftEntries, _draftEntries) &&
-            const DeepCollectionEquality().equals(other._pendingEntries, _pendingEntries) &&
-            const DeepCollectionEquality().equals(other._rejectedEntries, _rejectedEntries) &&
-            const DeepCollectionEquality().equals(other._draftSections, _draftSections) &&
-            const DeepCollectionEquality().equals(other._pendingSections, _pendingSections) &&
-            const DeepCollectionEquality().equals(other._rejectedSections, _rejectedSections) &&
-            const DeepCollectionEquality().equals(other._selectedEntryIds, _selectedEntryIds) &&
-            (identical(other.activeQuickSelect, activeQuickSelect) || other.activeQuickSelect == activeQuickSelect) &&
-            (identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting) &&
-            (identical(other.totalDraftMinutes, totalDraftMinutes) || other.totalDraftMinutes == totalDraftMinutes) &&
+            const DeepCollectionEquality().equals(
+              other._draftEntries,
+              _draftEntries,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._pendingEntries,
+              _pendingEntries,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._rejectedEntries,
+              _rejectedEntries,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._draftSections,
+              _draftSections,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._pendingSections,
+              _pendingSections,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._rejectedSections,
+              _rejectedSections,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._selectedEntryIds,
+              _selectedEntryIds,
+            ) &&
+            (identical(other.activeQuickSelect, activeQuickSelect) ||
+                other.activeQuickSelect == activeQuickSelect) &&
+            (identical(other.isSubmitting, isSubmitting) ||
+                other.isSubmitting == isSubmitting) &&
+            (identical(other.totalDraftMinutes, totalDraftMinutes) ||
+                other.totalDraftMinutes == totalDraftMinutes) &&
             (identical(other.totalPendingMinutes, totalPendingMinutes) ||
                 other.totalPendingMinutes == totalPendingMinutes) &&
             (identical(other.totalRejectedMinutes, totalRejectedMinutes) ||
                 other.totalRejectedMinutes == totalRejectedMinutes) &&
             (identical(other.selectedTotalMinutes, selectedTotalMinutes) ||
                 other.selectedTotalMinutes == selectedTotalMinutes) &&
-            (identical(other.toastMessage, toastMessage) || other.toastMessage == toastMessage) &&
-            (identical(other.toastType, toastType) || other.toastType == toastType));
+            (identical(other.toastMessage, toastMessage) ||
+                other.toastMessage == toastMessage) &&
+            (identical(other.toastType, toastType) ||
+                other.toastType == toastType));
   }
 
   @override
@@ -466,7 +508,10 @@ class _$SubmitHoursStateImpl implements _SubmitHoursState {
   @override
   @pragma('vm:prefer-inline')
   _$$SubmitHoursStateImplCopyWith<_$SubmitHoursStateImpl> get copyWith =>
-      __$$SubmitHoursStateImplCopyWithImpl<_$SubmitHoursStateImpl>(this, _$identity);
+      __$$SubmitHoursStateImplCopyWithImpl<_$SubmitHoursStateImpl>(
+        this,
+        _$identity,
+      );
 }
 
 abstract class _SubmitHoursState implements SubmitHoursState {
@@ -523,5 +568,6 @@ abstract class _SubmitHoursState implements SubmitHoursState {
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$SubmitHoursStateImplCopyWith<_$SubmitHoursStateImpl> get copyWith => throw _privateConstructorUsedError;
+  _$$SubmitHoursStateImplCopyWith<_$SubmitHoursStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

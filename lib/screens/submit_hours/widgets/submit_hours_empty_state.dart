@@ -22,13 +22,20 @@ class SubmitHoursEmptyState extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, size: 64, color: color),
           ),
           const SizedBox(height: 24),
           Text(title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
-          Text(subtitle, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodyMedium,
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );

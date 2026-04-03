@@ -5,7 +5,12 @@ class TagsDropdown extends StatefulWidget {
   final List<Tag> tags;
   final Function(List<String>) onChanged;
 
-  const TagsDropdown({super.key, required this.selectedTagIds, required this.tags, required this.onChanged});
+  const TagsDropdown({
+    super.key,
+    required this.selectedTagIds,
+    required this.tags,
+    required this.onChanged,
+  });
 
   @override
   State<TagsDropdown> createState() => _TagsDropdownState();
@@ -86,7 +91,9 @@ class _TagsDropdownState extends State<TagsDropdown> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder:
           (context) => _MobileTagsPicker(
             tags: widget.tags,
@@ -105,39 +112,57 @@ class _TagsDropdownState extends State<TagsDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedTags = widget.tags.where((t) => widget.selectedTagIds.contains(t.id)).toList();
+    final selectedTags =
+        widget.tags.where((t) => widget.selectedTagIds.contains(t.id)).toList();
 
     return CompositedTransformTarget(
       link: _layerLink,
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: const EdgeInsets.fromLTRB(8, 8, 4, 8),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceDark,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark),
+            border: Border(
+              bottom: BorderSide(
+                color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark,
+              ),
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
           ),
           child: Row(
             children: [
               Expanded(
                 child:
                     selectedTags.isEmpty
-                        ? const Text('Select tags', style: TextStyle(color: AppTheme.textMuted))
+                        ? const Text(
+                          'Select tags',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 13,
+                          ),
+                        )
                         : Wrap(
                           spacing: 4,
                           runSpacing: 4,
                           children:
                               selectedTags.take(2).map((tag) {
                                   return Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.colorFromHex(tag.color).withValues(alpha: 0.2),
+                                      color: AppTheme.colorFromHex(
+                                        tag.color,
+                                      ).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       tag.name,
-                                      style: TextStyle(fontSize: 11, color: AppTheme.colorFromHex(tag.color)),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppTheme.colorFromHex(tag.color),
+                                      ),
                                     ),
                                   );
                                 }).toList()
@@ -145,14 +170,23 @@ class _TagsDropdownState extends State<TagsDropdown> {
                                   selectedTags.length > 2
                                       ? [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: AppTheme.textMuted.withValues(alpha: 0.2),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color: AppTheme.textMuted
+                                                .withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
                                           ),
                                           child: Text(
                                             '+${selectedTags.length - 2}',
-                                            style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: AppTheme.textMuted,
+                                            ),
                                           ),
                                         ),
                                       ]
@@ -160,7 +194,10 @@ class _TagsDropdownState extends State<TagsDropdown> {
                                 ),
                         ),
               ),
-              Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: AppTheme.textMuted),
+              Icon(
+                _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: AppTheme.textMuted,
+              ),
             ],
           ),
         ),
@@ -228,7 +265,13 @@ class _DesktopTagsPickerState extends State<_DesktopTagsPicker> {
         color: AppTheme.cardDark,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppTheme.borderDark),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -239,7 +282,10 @@ class _DesktopTagsPickerState extends State<_DesktopTagsPicker> {
               children: [
                 if (_selectedIds.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryAccent.withValues(alpha: 0.2),
@@ -247,14 +293,21 @@ class _DesktopTagsPickerState extends State<_DesktopTagsPicker> {
                     ),
                     child: Text(
                       '${_selectedIds.length} selected',
-                      style: const TextStyle(color: AppTheme.primaryAccent, fontSize: 11, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: AppTheme.primaryAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 const Spacer(),
                 TextButton(
                   onPressed: widget.onClose,
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     minimumSize: Size.zero,
                   ),
                   child: const Text('Done', style: TextStyle(fontSize: 13)),
@@ -270,7 +323,10 @@ class _DesktopTagsPickerState extends State<_DesktopTagsPicker> {
                 hintText: 'Search tags...',
                 prefixIcon: const Icon(Icons.search, size: 20),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
               onChanged: (value) {
                 setState(() => _searchQuery = value);
@@ -289,19 +345,40 @@ class _DesktopTagsPickerState extends State<_DesktopTagsPicker> {
                     return InkWell(
                       onTap: () => _toggleTag(tag.id),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        color: isSelected ? AppTheme.colorFromHex(tag.color).withValues(alpha: 0.1) : null,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        color:
+                            isSelected
+                                ? AppTheme.colorFromHex(
+                                  tag.color,
+                                ).withValues(alpha: 0.1)
+                                : null,
                         child: Row(
                           children: [
                             Container(
                               width: 18,
                               height: 18,
                               decoration: BoxDecoration(
-                                color: isSelected ? AppTheme.colorFromHex(tag.color) : Colors.transparent,
+                                color:
+                                    isSelected
+                                        ? AppTheme.colorFromHex(tag.color)
+                                        : Colors.transparent,
                                 borderRadius: BorderRadius.circular(4),
-                                border: Border.all(color: AppTheme.colorFromHex(tag.color), width: 2),
+                                border: Border.all(
+                                  color: AppTheme.colorFromHex(tag.color),
+                                  width: 2,
+                                ),
                               ),
-                              child: isSelected ? const Icon(Icons.check, size: 12, color: Colors.white) : null,
+                              child:
+                                  isSelected
+                                      ? const Icon(
+                                        Icons.check,
+                                        size: 12,
+                                        color: Colors.white,
+                                      )
+                                      : null,
                             ),
                             const SizedBox(width: 10),
                             Container(
@@ -317,8 +394,14 @@ class _DesktopTagsPickerState extends State<_DesktopTagsPicker> {
                               child: Text(
                                 tag.name,
                                 style: TextStyle(
-                                  color: isSelected ? AppTheme.colorFromHex(tag.color) : AppTheme.textPrimary,
-                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                  color:
+                                      isSelected
+                                          ? AppTheme.colorFromHex(tag.color)
+                                          : AppTheme.textPrimary,
+                                  fontWeight:
+                                      isSelected
+                                          ? FontWeight.w600
+                                          : FontWeight.w400,
                                 ),
                               ),
                             ),
@@ -341,7 +424,11 @@ class _MobileTagsPicker extends StatefulWidget {
   final List<String> selectedTagIds;
   final Function(List<String>) onSelectionChanged;
 
-  const _MobileTagsPicker({required this.tags, required this.selectedTagIds, required this.onSelectionChanged});
+  const _MobileTagsPicker({
+    required this.tags,
+    required this.selectedTagIds,
+    required this.onSelectionChanged,
+  });
 
   @override
   State<_MobileTagsPicker> createState() => _MobileTagsPickerState();
@@ -388,19 +475,29 @@ class _MobileTagsPickerState extends State<_MobileTagsPicker> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Text('Select Tags', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Select Tags',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               if (_selectedIds.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(left: 8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryAccent.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '${_selectedIds.length}',
-                      style: const TextStyle(color: AppTheme.primaryAccent, fontSize: 12, fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        color: AppTheme.primaryAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -442,7 +539,10 @@ class _MobileTagsPickerState extends State<_MobileTagsPicker> {
                     secondary: Container(
                       width: 16,
                       height: 16,
-                      decoration: BoxDecoration(color: AppTheme.colorFromHex(tag.color), shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: AppTheme.colorFromHex(tag.color),
+                        shape: BoxShape.circle,
+                      ),
                     ),
                     title: Text(tag.name),
                     activeColor: AppTheme.primaryAccent,

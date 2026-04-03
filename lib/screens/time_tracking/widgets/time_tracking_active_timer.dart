@@ -1,7 +1,12 @@
 part of 'package:time_tracker/screens/time_tracking/time_tracking_screen.dart';
 
 class ActiveTimerWidget extends StatefulWidget {
-  const ActiveTimerWidget({super.key, required this.cubit, required this.state, this.onTap});
+  const ActiveTimerWidget({
+    super.key,
+    required this.cubit,
+    required this.state,
+    this.onTap,
+  });
 
   final TimeTrackingCubit cubit;
   final TimeTrackingState state;
@@ -27,8 +32,14 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
     }
 
     final timer = widget.state.activeTimer!;
-    final project = timer.projectId != null ? widget.cubit.getProjectById(timer.projectId!) : null;
-    final projectColor = project != null ? AppTheme.colorFromHex(project.color) : AppTheme.textMuted;
+    final project =
+        timer.projectId != null
+            ? widget.cubit.getProjectById(timer.projectId!)
+            : null;
+    final projectColor =
+        project != null
+            ? AppTheme.colorFromHex(project.color)
+            : AppTheme.textMuted;
 
     return StreamBuilder<int>(
       stream: _tickerStream,
@@ -40,7 +51,8 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
 
         String timeDisplay;
         if (hours > 0) {
-          timeDisplay = '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+          timeDisplay =
+              '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
         } else {
           timeDisplay = '$minutes:${seconds.toString().padLeft(2, '0')}';
         }
@@ -69,7 +81,10 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.successAccent.withValues(alpha: 0.5), width: 2),
+              border: Border.all(
+                color: AppTheme.successAccent.withValues(alpha: 0.5),
+                width: 2,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,12 +97,20 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                         color: AppTheme.successAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.timer, color: AppTheme.successAccent, size: 20),
+                      child: const Icon(
+                        Icons.timer,
+                        color: AppTheme.successAccent,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     const Text(
                       'Timer Running',
-                      style: TextStyle(color: AppTheme.successAccent, fontWeight: FontWeight.w600, fontSize: 14),
+                      style: TextStyle(
+                        color: AppTheme.successAccent,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                     ),
                     const Spacer(),
                     TweenAnimationBuilder<double>(
@@ -98,7 +121,9 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                           width: 10,
                           height: 10,
                           decoration: BoxDecoration(
-                            color: AppTheme.successAccent.withValues(alpha: value),
+                            color: AppTheme.successAccent.withValues(
+                              alpha: value,
+                            ),
                             shape: BoxShape.circle,
                           ),
                         );
@@ -113,7 +138,10 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                       timeDisplay,
                       style: Theme.of(
                         context,
-                      ).textTheme.headlineMedium?.copyWith(color: AppTheme.textPrimary, fontWeight: FontWeight.w700),
+                      ).textTheme.headlineMedium?.copyWith(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Column(
@@ -121,14 +149,18 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                       children: [
                         Text(
                           'Started at $startFormatted',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.textSecondary),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Will save: ${totalMinutes}m',
                           style: Theme.of(
                             context,
-                          ).textTheme.bodySmall?.copyWith(color: AppTheme.warningAccent, fontWeight: FontWeight.w600),
+                          ).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.warningAccent,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -138,9 +170,10 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                   const SizedBox(height: 16),
                   Text(
                     timer.description,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppTheme.textPrimary, fontWeight: FontWeight.w500),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
                 if (project != null) ...[
@@ -150,12 +183,17 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                       Container(
                         width: 10,
                         height: 10,
-                        decoration: BoxDecoration(color: projectColor, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: projectColor,
+                          shape: BoxShape.circle,
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         project.name,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
@@ -164,9 +202,16 @@ class _ActiveTimerWidgetState extends State<ActiveTimerWidget> {
                 Row(
                   children: [
                     ElevatedButton.icon(
-                      onPressed: widget.state.isStoppingTimer ? null : () => widget.cubit.stopTimer(),
+                      onPressed:
+                          widget.state.isStoppingTimer
+                              ? null
+                              : () => widget.cubit.stopTimer(),
                       icon: const Icon(Icons.stop),
-                      label: Text(widget.state.isStoppingTimer ? 'Stopping...' : 'Stop & Save'),
+                      label: Text(
+                        widget.state.isStoppingTimer
+                            ? 'Stopping...'
+                            : 'Stop & Save',
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.successAccent,
                         foregroundColor: AppTheme.primaryDark,

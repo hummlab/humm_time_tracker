@@ -36,7 +36,10 @@ class _TagsScreenState extends State<TagsScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = TagsCubit(AppDependencies.instance.workspaceRepository, AppDependencies.instance.tagsRepository);
+    _cubit = TagsCubit(
+      AppDependencies.instance.workspaceRepository,
+      AppDependencies.instance.tagsRepository,
+    );
   }
 
   @override
@@ -51,7 +54,11 @@ class _TagsScreenState extends State<TagsScreen> {
 
     _lastToastMessage = message;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AppToast.show(context, message, type: state.toastType ?? AppToastType.info);
+      AppToast.show(
+        context,
+        message,
+        type: state.toastType ?? AppToastType.info,
+      );
     });
     _cubit.clearToast();
   }
@@ -97,7 +104,12 @@ class _TagsScreenState extends State<TagsScreen> {
   }
 
   Future<void> _showTagDialog(BuildContext context, Tag? tag) async {
-    await showTagDialog(context: context, tagColors: TagsScreen.tagColors, tag: tag, onSave: _cubit.saveTag);
+    await showTagDialog(
+      context: context,
+      tagColors: TagsScreen.tagColors,
+      tag: tag,
+      onSave: _cubit.saveTag,
+    );
   }
 
   void _confirmDelete(BuildContext context, Tag tag) {

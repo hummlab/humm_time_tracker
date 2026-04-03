@@ -11,12 +11,14 @@ class ReportMembersDropdown extends StatefulWidget {
     required this.selectedMemberIds,
     this.onChanged,
     this.isDisabled = false,
+    this.compact = false,
   });
 
   final List<TeamMember> members;
   final List<String> selectedMemberIds;
   final ValueChanged<List<String>>? onChanged;
   final bool isDisabled;
+  final bool compact;
 
   @override
   State<ReportMembersDropdown> createState() => _ReportMembersDropdownState();
@@ -69,7 +71,10 @@ class _ReportMembersDropdownState extends State<ReportMembersDropdown> {
                     child: DesktopMultiSelectPicker(
                       title: 'Members',
                       icon: Icons.people_outline,
-                      items: widget.members.map((m) => FilterItem(m.id, m.name, null)).toList(),
+                      items:
+                          widget.members
+                              .map((m) => FilterItem(m.id, m.name, null))
+                              .toList(),
                       selectedIds: widget.selectedMemberIds,
                       onSelectionChanged: widget.onChanged ?? (_) {},
                       onClose: _closeDropdown,
@@ -99,13 +104,18 @@ class _ReportMembersDropdownState extends State<ReportMembersDropdown> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       isScrollControlled: true,
       builder:
           (context) => MobileMultiSelectPicker(
             title: 'Members',
             icon: Icons.people_outline,
-            items: widget.members.map((m) => FilterItem(m.id, m.name, null)).toList(),
+            items:
+                widget.members
+                    .map((m) => FilterItem(m.id, m.name, null))
+                    .toList(),
             selectedIds: widget.selectedMemberIds,
             onSelectionChanged: widget.onChanged ?? (_) {},
           ),
@@ -121,35 +131,56 @@ class _ReportMembersDropdownState extends State<ReportMembersDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedMembers = widget.members.where((m) => widget.selectedMemberIds.contains(m.id)).toList();
-    final accentColor = widget.isDisabled ? AppTheme.textMuted : AppTheme.secondaryAccent;
+    final selectedMembers =
+        widget.members
+            .where((m) => widget.selectedMemberIds.contains(m.id))
+            .toList();
+    final accentColor =
+        widget.isDisabled ? AppTheme.textMuted : AppTheme.secondaryAccent;
 
     return CompositedTransformTarget(
       link: _layerLink,
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: widget.compact ? 10 : 14,
+          ),
           decoration: BoxDecoration(
-            color: widget.isDisabled ? AppTheme.surfaceDark.withValues(alpha: 0.5) : AppTheme.surfaceDark,
+            color:
+                widget.isDisabled
+                    ? AppTheme.surfaceDark.withValues(alpha: 0.5)
+                    : AppTheme.surfaceDark,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark),
+            border: Border.all(
+              color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark,
+            ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.people_outline,
-                size: 18,
-                color: selectedMembers.isNotEmpty ? accentColor : AppTheme.textMuted,
+                size: widget.compact ? 16 : 18,
+                color:
+                    widget.isDisabled
+                        ? AppTheme.textMuted.withValues(alpha: 0.45)
+                        : (selectedMembers.isNotEmpty
+                            ? accentColor
+                            : AppTheme.textMuted),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: widget.compact ? 6 : 8),
               Expanded(
                 child:
                     selectedMembers.isEmpty
                         ? Text(
                           'All Members',
                           style: TextStyle(
-                            color: widget.isDisabled ? AppTheme.textMuted.withValues(alpha: 0.5) : AppTheme.textMuted,
+                            color:
+                                widget.isDisabled
+                                    ? AppTheme.textMuted.withValues(alpha: 0.5)
+                                    : AppTheme.textMuted,
+                            fontSize: widget.compact ? 12 : 14,
                           ),
                         )
                         : Wrap(
@@ -160,33 +191,57 @@ class _ReportMembersDropdownState extends State<ReportMembersDropdown> {
                                 .take(2)
                                 .map(
                                   (member) => Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: accentColor.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
-                                    child: Text(member.name, style: TextStyle(fontSize: 11, color: accentColor)),
+                                    child: Text(
+                                      member.name,
+                                      style: TextStyle(
+                                        fontSize: widget.compact ? 10 : 11,
+                                        color: accentColor,
+                                      ),
+                                    ),
                                   ),
                                 ),
                             if (selectedMembers.length > 2)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.textMuted.withValues(alpha: 0.2),
+                                  color: AppTheme.textMuted.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   '+${selectedMembers.length - 2}',
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.textMuted,
+                                  ),
                                 ),
                               ),
                           ],
                         ),
               ),
               if (widget.isDisabled)
-                const Icon(Icons.lock_outline, size: 16, color: AppTheme.textMuted)
+                Icon(
+                  Icons.lock_outline,
+                  size: 14,
+                  color: AppTheme.textMuted.withValues(alpha: 0.45),
+                )
               else
-                Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: AppTheme.textMuted),
+                Icon(
+                  _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                  color: AppTheme.textMuted,
+                ),
             ],
           ),
         ),

@@ -18,7 +18,8 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$ReportsState {
   ReportPeriod get selectedPeriod => throw _privateConstructorUsedError;
-  DateTimeRange<DateTime> get selectedRange => throw _privateConstructorUsedError;
+  DateTimeRange<DateTime> get selectedRange =>
+      throw _privateConstructorUsedError;
   List<String> get selectedProjectIds => throw _privateConstructorUsedError;
   List<String> get selectedClientIds => throw _privateConstructorUsedError;
   List<String> get selectedTagIds => throw _privateConstructorUsedError;
@@ -27,6 +28,8 @@ mixin _$ReportsState {
   SortBy get sortBy => throw _privateConstructorUsedError;
   bool get sortDescending => throw _privateConstructorUsedError;
   List<TimeEntry> get filteredEntries => throw _privateConstructorUsedError;
+  int get totalMatchingEntries => throw _privateConstructorUsedError;
+  bool get hasMoreEntries => throw _privateConstructorUsedError;
   Map<String, int> get minutesByProject => throw _privateConstructorUsedError;
   int get totalMinutes => throw _privateConstructorUsedError;
   int get uniqueDays => throw _privateConstructorUsedError;
@@ -36,19 +39,23 @@ mixin _$ReportsState {
   List<Tag> get tags => throw _privateConstructorUsedError;
   bool get canChangeMembers => throw _privateConstructorUsedError;
   bool get hasFilters => throw _privateConstructorUsedError;
+  bool get isLoading => throw _privateConstructorUsedError;
   String? get toastMessage => throw _privateConstructorUsedError;
   AppToastType? get toastType => throw _privateConstructorUsedError;
 
   /// Create a copy of ReportsState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $ReportsStateCopyWith<ReportsState> get copyWith => throw _privateConstructorUsedError;
+  $ReportsStateCopyWith<ReportsState> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class $ReportsStateCopyWith<$Res> {
-  factory $ReportsStateCopyWith(ReportsState value, $Res Function(ReportsState) then) =
-      _$ReportsStateCopyWithImpl<$Res, ReportsState>;
+  factory $ReportsStateCopyWith(
+    ReportsState value,
+    $Res Function(ReportsState) then,
+  ) = _$ReportsStateCopyWithImpl<$Res, ReportsState>;
   @useResult
   $Res call({
     ReportPeriod selectedPeriod,
@@ -61,6 +68,8 @@ abstract class $ReportsStateCopyWith<$Res> {
     SortBy sortBy,
     bool sortDescending,
     List<TimeEntry> filteredEntries,
+    int totalMatchingEntries,
+    bool hasMoreEntries,
     Map<String, int> minutesByProject,
     int totalMinutes,
     int uniqueDays,
@@ -70,13 +79,15 @@ abstract class $ReportsStateCopyWith<$Res> {
     List<Tag> tags,
     bool canChangeMembers,
     bool hasFilters,
+    bool isLoading,
     String? toastMessage,
     AppToastType? toastType,
   });
 }
 
 /// @nodoc
-class _$ReportsStateCopyWithImpl<$Res, $Val extends ReportsState> implements $ReportsStateCopyWith<$Res> {
+class _$ReportsStateCopyWithImpl<$Res, $Val extends ReportsState>
+    implements $ReportsStateCopyWith<$Res> {
   _$ReportsStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
@@ -99,6 +110,8 @@ class _$ReportsStateCopyWithImpl<$Res, $Val extends ReportsState> implements $Re
     Object? sortBy = null,
     Object? sortDescending = null,
     Object? filteredEntries = null,
+    Object? totalMatchingEntries = null,
+    Object? hasMoreEntries = null,
     Object? minutesByProject = null,
     Object? totalMinutes = null,
     Object? uniqueDays = null,
@@ -108,6 +121,7 @@ class _$ReportsStateCopyWithImpl<$Res, $Val extends ReportsState> implements $Re
     Object? tags = null,
     Object? canChangeMembers = null,
     Object? hasFilters = null,
+    Object? isLoading = null,
     Object? toastMessage = freezed,
     Object? toastType = freezed,
   }) {
@@ -163,6 +177,16 @@ class _$ReportsStateCopyWithImpl<$Res, $Val extends ReportsState> implements $Re
                     ? _value.filteredEntries
                     : filteredEntries // ignore: cast_nullable_to_non_nullable
                         as List<TimeEntry>,
+            totalMatchingEntries:
+                null == totalMatchingEntries
+                    ? _value.totalMatchingEntries
+                    : totalMatchingEntries // ignore: cast_nullable_to_non_nullable
+                        as int,
+            hasMoreEntries:
+                null == hasMoreEntries
+                    ? _value.hasMoreEntries
+                    : hasMoreEntries // ignore: cast_nullable_to_non_nullable
+                        as bool,
             minutesByProject:
                 null == minutesByProject
                     ? _value.minutesByProject
@@ -208,6 +232,11 @@ class _$ReportsStateCopyWithImpl<$Res, $Val extends ReportsState> implements $Re
                     ? _value.hasFilters
                     : hasFilters // ignore: cast_nullable_to_non_nullable
                         as bool,
+            isLoading:
+                null == isLoading
+                    ? _value.isLoading
+                    : isLoading // ignore: cast_nullable_to_non_nullable
+                        as bool,
             toastMessage:
                 freezed == toastMessage
                     ? _value.toastMessage
@@ -225,9 +254,12 @@ class _$ReportsStateCopyWithImpl<$Res, $Val extends ReportsState> implements $Re
 }
 
 /// @nodoc
-abstract class _$$ReportsStateImplCopyWith<$Res> implements $ReportsStateCopyWith<$Res> {
-  factory _$$ReportsStateImplCopyWith(_$ReportsStateImpl value, $Res Function(_$ReportsStateImpl) then) =
-      __$$ReportsStateImplCopyWithImpl<$Res>;
+abstract class _$$ReportsStateImplCopyWith<$Res>
+    implements $ReportsStateCopyWith<$Res> {
+  factory _$$ReportsStateImplCopyWith(
+    _$ReportsStateImpl value,
+    $Res Function(_$ReportsStateImpl) then,
+  ) = __$$ReportsStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -241,6 +273,8 @@ abstract class _$$ReportsStateImplCopyWith<$Res> implements $ReportsStateCopyWit
     SortBy sortBy,
     bool sortDescending,
     List<TimeEntry> filteredEntries,
+    int totalMatchingEntries,
+    bool hasMoreEntries,
     Map<String, int> minutesByProject,
     int totalMinutes,
     int uniqueDays,
@@ -250,16 +284,20 @@ abstract class _$$ReportsStateImplCopyWith<$Res> implements $ReportsStateCopyWit
     List<Tag> tags,
     bool canChangeMembers,
     bool hasFilters,
+    bool isLoading,
     String? toastMessage,
     AppToastType? toastType,
   });
 }
 
 /// @nodoc
-class __$$ReportsStateImplCopyWithImpl<$Res> extends _$ReportsStateCopyWithImpl<$Res, _$ReportsStateImpl>
+class __$$ReportsStateImplCopyWithImpl<$Res>
+    extends _$ReportsStateCopyWithImpl<$Res, _$ReportsStateImpl>
     implements _$$ReportsStateImplCopyWith<$Res> {
-  __$$ReportsStateImplCopyWithImpl(_$ReportsStateImpl _value, $Res Function(_$ReportsStateImpl) _then)
-    : super(_value, _then);
+  __$$ReportsStateImplCopyWithImpl(
+    _$ReportsStateImpl _value,
+    $Res Function(_$ReportsStateImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of ReportsState
   /// with the given fields replaced by the non-null parameter values.
@@ -276,6 +314,8 @@ class __$$ReportsStateImplCopyWithImpl<$Res> extends _$ReportsStateCopyWithImpl<
     Object? sortBy = null,
     Object? sortDescending = null,
     Object? filteredEntries = null,
+    Object? totalMatchingEntries = null,
+    Object? hasMoreEntries = null,
     Object? minutesByProject = null,
     Object? totalMinutes = null,
     Object? uniqueDays = null,
@@ -285,6 +325,7 @@ class __$$ReportsStateImplCopyWithImpl<$Res> extends _$ReportsStateCopyWithImpl<
     Object? tags = null,
     Object? canChangeMembers = null,
     Object? hasFilters = null,
+    Object? isLoading = null,
     Object? toastMessage = freezed,
     Object? toastType = freezed,
   }) {
@@ -340,6 +381,16 @@ class __$$ReportsStateImplCopyWithImpl<$Res> extends _$ReportsStateCopyWithImpl<
                 ? _value._filteredEntries
                 : filteredEntries // ignore: cast_nullable_to_non_nullable
                     as List<TimeEntry>,
+        totalMatchingEntries:
+            null == totalMatchingEntries
+                ? _value.totalMatchingEntries
+                : totalMatchingEntries // ignore: cast_nullable_to_non_nullable
+                    as int,
+        hasMoreEntries:
+            null == hasMoreEntries
+                ? _value.hasMoreEntries
+                : hasMoreEntries // ignore: cast_nullable_to_non_nullable
+                    as bool,
         minutesByProject:
             null == minutesByProject
                 ? _value._minutesByProject
@@ -385,6 +436,11 @@ class __$$ReportsStateImplCopyWithImpl<$Res> extends _$ReportsStateCopyWithImpl<
                 ? _value.hasFilters
                 : hasFilters // ignore: cast_nullable_to_non_nullable
                     as bool,
+        isLoading:
+            null == isLoading
+                ? _value.isLoading
+                : isLoading // ignore: cast_nullable_to_non_nullable
+                    as bool,
         toastMessage:
             freezed == toastMessage
                 ? _value.toastMessage
@@ -414,6 +470,8 @@ class _$ReportsStateImpl implements _ReportsState {
     required this.sortBy,
     required this.sortDescending,
     required final List<TimeEntry> filteredEntries,
+    required this.totalMatchingEntries,
+    required this.hasMoreEntries,
     required final Map<String, int> minutesByProject,
     required this.totalMinutes,
     required this.uniqueDays,
@@ -423,6 +481,7 @@ class _$ReportsStateImpl implements _ReportsState {
     required final List<Tag> tags,
     required this.canChangeMembers,
     required this.hasFilters,
+    required this.isLoading,
     this.toastMessage,
     this.toastType,
   }) : _selectedProjectIds = selectedProjectIds,
@@ -443,7 +502,8 @@ class _$ReportsStateImpl implements _ReportsState {
   final List<String> _selectedProjectIds;
   @override
   List<String> get selectedProjectIds {
-    if (_selectedProjectIds is EqualUnmodifiableListView) return _selectedProjectIds;
+    if (_selectedProjectIds is EqualUnmodifiableListView)
+      return _selectedProjectIds;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_selectedProjectIds);
   }
@@ -451,7 +511,8 @@ class _$ReportsStateImpl implements _ReportsState {
   final List<String> _selectedClientIds;
   @override
   List<String> get selectedClientIds {
-    if (_selectedClientIds is EqualUnmodifiableListView) return _selectedClientIds;
+    if (_selectedClientIds is EqualUnmodifiableListView)
+      return _selectedClientIds;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_selectedClientIds);
   }
@@ -467,7 +528,8 @@ class _$ReportsStateImpl implements _ReportsState {
   final List<String> _selectedMemberIds;
   @override
   List<String> get selectedMemberIds {
-    if (_selectedMemberIds is EqualUnmodifiableListView) return _selectedMemberIds;
+    if (_selectedMemberIds is EqualUnmodifiableListView)
+      return _selectedMemberIds;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_selectedMemberIds);
   }
@@ -486,6 +548,10 @@ class _$ReportsStateImpl implements _ReportsState {
     return EqualUnmodifiableListView(_filteredEntries);
   }
 
+  @override
+  final int totalMatchingEntries;
+  @override
+  final bool hasMoreEntries;
   final Map<String, int> _minutesByProject;
   @override
   Map<String, int> get minutesByProject {
@@ -501,7 +567,8 @@ class _$ReportsStateImpl implements _ReportsState {
   final List<Project> _filteredProjects;
   @override
   List<Project> get filteredProjects {
-    if (_filteredProjects is EqualUnmodifiableListView) return _filteredProjects;
+    if (_filteredProjects is EqualUnmodifiableListView)
+      return _filteredProjects;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_filteredProjects);
   }
@@ -535,13 +602,15 @@ class _$ReportsStateImpl implements _ReportsState {
   @override
   final bool hasFilters;
   @override
+  final bool isLoading;
+  @override
   final String? toastMessage;
   @override
   final AppToastType? toastType;
 
   @override
   String toString() {
-    return 'ReportsState(selectedPeriod: $selectedPeriod, selectedRange: $selectedRange, selectedProjectIds: $selectedProjectIds, selectedClientIds: $selectedClientIds, selectedTagIds: $selectedTagIds, selectedMemberIds: $selectedMemberIds, groupBy: $groupBy, sortBy: $sortBy, sortDescending: $sortDescending, filteredEntries: $filteredEntries, minutesByProject: $minutesByProject, totalMinutes: $totalMinutes, uniqueDays: $uniqueDays, filteredProjects: $filteredProjects, filteredClients: $filteredClients, filteredMembers: $filteredMembers, tags: $tags, canChangeMembers: $canChangeMembers, hasFilters: $hasFilters, toastMessage: $toastMessage, toastType: $toastType)';
+    return 'ReportsState(selectedPeriod: $selectedPeriod, selectedRange: $selectedRange, selectedProjectIds: $selectedProjectIds, selectedClientIds: $selectedClientIds, selectedTagIds: $selectedTagIds, selectedMemberIds: $selectedMemberIds, groupBy: $groupBy, sortBy: $sortBy, sortDescending: $sortDescending, filteredEntries: $filteredEntries, totalMatchingEntries: $totalMatchingEntries, hasMoreEntries: $hasMoreEntries, minutesByProject: $minutesByProject, totalMinutes: $totalMinutes, uniqueDays: $uniqueDays, filteredProjects: $filteredProjects, filteredClients: $filteredClients, filteredMembers: $filteredMembers, tags: $tags, canChangeMembers: $canChangeMembers, hasFilters: $hasFilters, isLoading: $isLoading, toastMessage: $toastMessage, toastType: $toastType)';
   }
 
   @override
@@ -549,27 +618,69 @@ class _$ReportsStateImpl implements _ReportsState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$ReportsStateImpl &&
-            (identical(other.selectedPeriod, selectedPeriod) || other.selectedPeriod == selectedPeriod) &&
-            (identical(other.selectedRange, selectedRange) || other.selectedRange == selectedRange) &&
-            const DeepCollectionEquality().equals(other._selectedProjectIds, _selectedProjectIds) &&
-            const DeepCollectionEquality().equals(other._selectedClientIds, _selectedClientIds) &&
-            const DeepCollectionEquality().equals(other._selectedTagIds, _selectedTagIds) &&
-            const DeepCollectionEquality().equals(other._selectedMemberIds, _selectedMemberIds) &&
+            (identical(other.selectedPeriod, selectedPeriod) ||
+                other.selectedPeriod == selectedPeriod) &&
+            (identical(other.selectedRange, selectedRange) ||
+                other.selectedRange == selectedRange) &&
+            const DeepCollectionEquality().equals(
+              other._selectedProjectIds,
+              _selectedProjectIds,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._selectedClientIds,
+              _selectedClientIds,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._selectedTagIds,
+              _selectedTagIds,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._selectedMemberIds,
+              _selectedMemberIds,
+            ) &&
             (identical(other.groupBy, groupBy) || other.groupBy == groupBy) &&
             (identical(other.sortBy, sortBy) || other.sortBy == sortBy) &&
-            (identical(other.sortDescending, sortDescending) || other.sortDescending == sortDescending) &&
-            const DeepCollectionEquality().equals(other._filteredEntries, _filteredEntries) &&
-            const DeepCollectionEquality().equals(other._minutesByProject, _minutesByProject) &&
-            (identical(other.totalMinutes, totalMinutes) || other.totalMinutes == totalMinutes) &&
-            (identical(other.uniqueDays, uniqueDays) || other.uniqueDays == uniqueDays) &&
-            const DeepCollectionEquality().equals(other._filteredProjects, _filteredProjects) &&
-            const DeepCollectionEquality().equals(other._filteredClients, _filteredClients) &&
-            const DeepCollectionEquality().equals(other._filteredMembers, _filteredMembers) &&
+            (identical(other.sortDescending, sortDescending) ||
+                other.sortDescending == sortDescending) &&
+            const DeepCollectionEquality().equals(
+              other._filteredEntries,
+              _filteredEntries,
+            ) &&
+            (identical(other.totalMatchingEntries, totalMatchingEntries) ||
+                other.totalMatchingEntries == totalMatchingEntries) &&
+            (identical(other.hasMoreEntries, hasMoreEntries) ||
+                other.hasMoreEntries == hasMoreEntries) &&
+            const DeepCollectionEquality().equals(
+              other._minutesByProject,
+              _minutesByProject,
+            ) &&
+            (identical(other.totalMinutes, totalMinutes) ||
+                other.totalMinutes == totalMinutes) &&
+            (identical(other.uniqueDays, uniqueDays) ||
+                other.uniqueDays == uniqueDays) &&
+            const DeepCollectionEquality().equals(
+              other._filteredProjects,
+              _filteredProjects,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._filteredClients,
+              _filteredClients,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._filteredMembers,
+              _filteredMembers,
+            ) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
-            (identical(other.canChangeMembers, canChangeMembers) || other.canChangeMembers == canChangeMembers) &&
-            (identical(other.hasFilters, hasFilters) || other.hasFilters == hasFilters) &&
-            (identical(other.toastMessage, toastMessage) || other.toastMessage == toastMessage) &&
-            (identical(other.toastType, toastType) || other.toastType == toastType));
+            (identical(other.canChangeMembers, canChangeMembers) ||
+                other.canChangeMembers == canChangeMembers) &&
+            (identical(other.hasFilters, hasFilters) ||
+                other.hasFilters == hasFilters) &&
+            (identical(other.isLoading, isLoading) ||
+                other.isLoading == isLoading) &&
+            (identical(other.toastMessage, toastMessage) ||
+                other.toastMessage == toastMessage) &&
+            (identical(other.toastType, toastType) ||
+                other.toastType == toastType));
   }
 
   @override
@@ -585,6 +696,8 @@ class _$ReportsStateImpl implements _ReportsState {
     sortBy,
     sortDescending,
     const DeepCollectionEquality().hash(_filteredEntries),
+    totalMatchingEntries,
+    hasMoreEntries,
     const DeepCollectionEquality().hash(_minutesByProject),
     totalMinutes,
     uniqueDays,
@@ -594,6 +707,7 @@ class _$ReportsStateImpl implements _ReportsState {
     const DeepCollectionEquality().hash(_tags),
     canChangeMembers,
     hasFilters,
+    isLoading,
     toastMessage,
     toastType,
   ]);
@@ -619,6 +733,8 @@ abstract class _ReportsState implements ReportsState {
     required final SortBy sortBy,
     required final bool sortDescending,
     required final List<TimeEntry> filteredEntries,
+    required final int totalMatchingEntries,
+    required final bool hasMoreEntries,
     required final Map<String, int> minutesByProject,
     required final int totalMinutes,
     required final int uniqueDays,
@@ -628,6 +744,7 @@ abstract class _ReportsState implements ReportsState {
     required final List<Tag> tags,
     required final bool canChangeMembers,
     required final bool hasFilters,
+    required final bool isLoading,
     final String? toastMessage,
     final AppToastType? toastType,
   }) = _$ReportsStateImpl;
@@ -653,6 +770,10 @@ abstract class _ReportsState implements ReportsState {
   @override
   List<TimeEntry> get filteredEntries;
   @override
+  int get totalMatchingEntries;
+  @override
+  bool get hasMoreEntries;
+  @override
   Map<String, int> get minutesByProject;
   @override
   int get totalMinutes;
@@ -671,6 +792,8 @@ abstract class _ReportsState implements ReportsState {
   @override
   bool get hasFilters;
   @override
+  bool get isLoading;
+  @override
   String? get toastMessage;
   @override
   AppToastType? get toastType;
@@ -679,5 +802,6 @@ abstract class _ReportsState implements ReportsState {
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$ReportsStateImplCopyWith<_$ReportsStateImpl> get copyWith => throw _privateConstructorUsedError;
+  _$$ReportsStateImplCopyWith<_$ReportsStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

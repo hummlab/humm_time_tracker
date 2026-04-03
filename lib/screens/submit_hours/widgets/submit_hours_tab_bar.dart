@@ -17,51 +17,89 @@ class SubmitHoursTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.borderDark),
-      ),
-      child: TabBar(
-        controller: controller,
-        indicator: BoxDecoration(
-          color: AppTheme.primaryAccent.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceDark.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _SegmentTab(
+                  label: 'Draft ($draftCount)',
+                  isActive: controller.index == 0,
+                  onTap: () => controller.animateTo(0),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: _SegmentTab(
+                  label: 'Pending ($pendingCount)',
+                  isActive: controller.index == 1,
+                  onTap: () => controller.animateTo(1),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: _SegmentTab(
+                  label: 'Rejected ($rejectedCount)',
+                  isActive: controller.index == 2,
+                  onTap: () => controller.animateTo(2),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SegmentTab extends StatelessWidget {
+  const _SegmentTab({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            color:
+                isActive
+                    ? AppTheme.primaryAccent.withValues(alpha: 0.2)
+                    : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: isActive ? AppTheme.primaryAccent : AppTheme.textMuted,
+              fontSize: 13,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+            ),
+          ),
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelColor: AppTheme.primaryAccent,
-        unselectedLabelColor: AppTheme.textMuted,
-        tabs: [
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [const Icon(Icons.edit_note, size: 18), const SizedBox(width: 4), Text('Draft ($draftCount)')],
-            ),
-          ),
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.hourglass_empty, size: 18),
-                const SizedBox(width: 4),
-                Text('Pending ($pendingCount)'),
-              ],
-            ),
-          ),
-          Tab(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.cancel_outlined, size: 18),
-                const SizedBox(width: 4),
-                Text('Rejected ($rejectedCount)'),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -7,7 +7,8 @@ import 'package:time_tracker/widgets/app_toast.dart';
 import 'clients_state.dart';
 
 class ClientsCubit extends BaseCubit<ClientsState> {
-  ClientsCubit(this._workspaceRepository, this._clientsRepository) : super(ClientsState.initial()) {
+  ClientsCubit(this._workspaceRepository, this._clientsRepository)
+    : super(ClientsState.initial()) {
     _workspaceRepository.addListener(_syncFromSources);
     _syncFromSources();
   }
@@ -31,10 +32,19 @@ class ClientsCubit extends BaseCubit<ClientsState> {
     return state.projectCountsByClientId[clientId] ?? 0;
   }
 
-  Future<bool> saveClient({Client? existing, required String name, required List<String> linkedEmails}) async {
+  Future<bool> saveClient({
+    Client? existing,
+    required String name,
+    required List<String> linkedEmails,
+  }) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
-      emit(state.copyWith(toastMessage: 'Please enter a client name', toastType: AppToastType.error));
+      emit(
+        state.copyWith(
+          toastMessage: 'Please enter a client name',
+          toastType: AppToastType.error,
+        ),
+      );
       return false;
     }
 
@@ -43,7 +53,12 @@ class ClientsCubit extends BaseCubit<ClientsState> {
     final success =
         existing == null
             ? await _clientsRepository.addClientSafe(
-              Client(id: '', name: trimmedName, createdAt: DateTime.now(), linkedEmails: linkedEmails),
+              Client(
+                id: '',
+                name: trimmedName,
+                createdAt: DateTime.now(),
+                linkedEmails: linkedEmails,
+              ),
             )
             : await _clientsRepository.updateClientSafe(
               existing.copyWith(name: trimmedName, linkedEmails: linkedEmails),
@@ -54,7 +69,10 @@ class ClientsCubit extends BaseCubit<ClientsState> {
     if (!success) {
       emit(
         state.copyWith(
-          toastMessage: existing == null ? 'Failed to create client' : 'Failed to update client',
+          toastMessage:
+              existing == null
+                  ? 'Failed to create client'
+                  : 'Failed to update client',
           toastType: AppToastType.error,
         ),
       );
@@ -70,7 +88,12 @@ class ClientsCubit extends BaseCubit<ClientsState> {
     emit(state.copyWith(isProcessing: false));
 
     if (!success) {
-      emit(state.copyWith(toastMessage: 'Failed to delete client', toastType: AppToastType.error));
+      emit(
+        state.copyWith(
+          toastMessage: 'Failed to delete client',
+          toastType: AppToastType.error,
+        ),
+      );
     }
   }
 

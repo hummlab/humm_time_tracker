@@ -3,6 +3,9 @@ part of 'time_data_provider.dart';
 // ignore_for_file: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
 extension DataProviderCore on TimeDataProvider {
+  static const int _historyWindowDays = 365;
+  static const int _futureWindowDays = 30;
+
   void init() {
     final userId = _firebaseService.currentUserId;
     if (userId == null) {
@@ -23,7 +26,7 @@ extension DataProviderCore on TimeDataProvider {
     _projectsRepository?.start();
     _teamMembersRepository?.start();
     _tagsRepository?.start();
-    _timeEntriesRepository?.start();
+    _ensureTimeEntriesWindow(_selectedDate, force: true);
 
     _initClickUp();
     _initJira();
@@ -55,7 +58,9 @@ extension DataProviderCore on TimeDataProvider {
   }
 
   Future<void> refreshClickUpTasks({bool forceFullLoad = false}) async {
-    _clickUpTasks = await _clickUpRepository.loadTasksFromFirestore(forceFullLoad: forceFullLoad);
+    _clickUpTasks = await _clickUpRepository.loadTasksFromFirestore(
+      forceFullLoad: forceFullLoad,
+    );
     notifyListeners();
   }
 
@@ -65,11 +70,17 @@ extension DataProviderCore on TimeDataProvider {
     notifyListeners();
   }
 
-  Future<List<ClickUpTask>> searchClickUpTasks(String query, {int limit = 4}) async {
+  Future<List<ClickUpTask>> searchClickUpTasks(
+    String query, {
+    int limit = 4,
+  }) async {
     return _clickUpRepository.searchTasks(query, limit: limit);
   }
 
-  Future<List<JiraIssue>> searchJiraIssues(String query, {int limit = 4}) async {
+  Future<List<JiraIssue>> searchJiraIssues(
+    String query, {
+    int limit = 4,
+  }) async {
     return _jiraRepository.searchIssues(query, limit: limit);
   }
 
@@ -94,13 +105,46 @@ extension DataProviderCore on TimeDataProvider {
     _lastUsedDescriptions = [];
     final now = DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
+    _entriesWindowStart = null;
+    _entriesWindowEnd = null;
     notifyListeners();
     _clearActiveTimerFromStorage();
   }
 
   void setSelectedDate(DateTime date) {
     _selectedDate = DateTime(date.year, date.month, date.day);
+    _ensureTimeEntriesWindow(_selectedDate);
     notifyListeners();
+  }
+
+  void _ensureTimeEntriesWindow(DateTime anchorDate, {bool force = false}) {
+    final start = DateTime(
+      anchorDate.year,
+      anchorDate.month,
+      anchorDate.day,
+    ).subtract(const Duration(days: _historyWindowDays));
+    final end = DateTime(
+      anchorDate.year,
+      anchorDate.month,
+      anchorDate.day,
+    ).add(const Duration(days: _futureWindowDays));
+
+    if (!force &&
+        _entriesWindowStart != null &&
+        _entriesWindowEnd != null &&
+        !anchorDate.isBefore(_entriesWindowStart!) &&
+        !anchorDate.isAfter(_entriesWindowEnd!)) {
+      return;
+    }
+
+    _entriesWindowStart = start;
+    _entriesWindowEnd = end;
+    _timeEntriesRepository?.start(
+      query: TimeEntriesQuery(
+        start: _entriesWindowStart,
+        end: _entriesWindowEnd,
+      ),
+    );
   }
 
   void addToLastUsedDurations(int duration) {
@@ -114,7 +158,9 @@ extension DataProviderCore on TimeDataProvider {
 
   void addToLastUsedDescriptions(String description) {
     if (description.trim().isEmpty) return;
-    _lastUsedDescriptions.removeWhere((d) => d.toLowerCase() == description.toLowerCase());
+    _lastUsedDescriptions.removeWhere(
+      (d) => d.toLowerCase() == description.toLowerCase(),
+    );
     _lastUsedDescriptions.insert(0, description);
     if (_lastUsedDescriptions.length > 4) {
       _lastUsedDescriptions = _lastUsedDescriptions.take(4).toList();

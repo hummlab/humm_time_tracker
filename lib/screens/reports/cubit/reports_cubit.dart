@@ -1,4 +1,7 @@
-import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
+import 'dart:async';
+
+import 'package:flutter/services.dart'
+    show Clipboard, ClipboardData, rootBundle;
 import 'package:flutter/material.dart' show DateTimeRange;
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -6,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:time_tracker/cubit/base_cubit.dart';
 import 'package:time_tracker/data_providers/auth/auth_data_provider.dart';
+import 'package:time_tracker/data_repositories/firebase/time_entries_repository.dart';
 import 'package:time_tracker/data_repositories/workspace_repository.dart';
 import 'package:time_tracker/models/org/team_member.dart';
 import 'package:time_tracker/models/projects/client.dart';
@@ -17,22 +21,47 @@ import 'package:time_tracker/utils/csv_download_helper.dart' as csv_download;
 import 'package:time_tracker/widgets/app_toast.dart';
 
 class ReportsCubit extends BaseCubit<ReportsState> {
-  ReportsCubit(this._workspaceRepository, this._authDataProvider) : super(ReportsState.initial()) {
-    _workspaceRepository.addListener(_syncFromSources);
-    _authDataProvider.addListener(_syncFromSources);
-    _syncFromSources();
+  ReportsCubit(
+    this._workspaceRepository,
+    this._authDataProvider,
+    this._timeEntriesRepository,
+  ) : super(ReportsState.initial()) {
+    _workspaceRepository.addListener(_scheduleSync);
+    _authDataProvider.addListener(_scheduleSync);
+    _scheduleSync(immediate: true);
   }
 
   final WorkspaceRepository _workspaceRepository;
   final AuthDataProvider _authDataProvider;
+  final TimeEntriesRepository _timeEntriesRepository;
   bool _didInitializeMemberFilter = false;
+  Timer? _syncDebounce;
+  int _syncRequestToken = 0;
+  static const int _pageSize = 50;
+  int _visibleEntriesLimit = _pageSize;
+  List<TimeEntry> _allMatchingEntries = const [];
 
-  void _syncFromSources() {
+  void _scheduleSync({bool immediate = false}) {
+    _syncDebounce?.cancel();
+    if (immediate) {
+      unawaited(_syncFromSources());
+      return;
+    }
+    _syncDebounce = Timer(
+      const Duration(milliseconds: 180),
+      () => unawaited(_syncFromSources()),
+    );
+  }
+
+  Future<void> _syncFromSources() async {
+    final requestToken = ++_syncRequestToken;
     final isAdmin = _authDataProvider.isAdmin;
     final isManager = _authDataProvider.isManager;
     final hasManagerAccess = _authDataProvider.hasManagerAccess;
     final currentUserId = _authDataProvider.currentUserId;
-    final currentMember = _workspaceRepository.getCurrentUserTeamMember(currentUserId);
+    final currentMember = _workspaceRepository.getCurrentUserTeamMember(
+      currentUserId,
+    );
 
     var selectedMemberIds = state.selectedMemberIds;
     if (!_didInitializeMemberFilter && !isAdmin && !isManager) {
@@ -63,11 +92,24 @@ class ReportsCubit extends BaseCubit<ReportsState> {
 
     final canChangeMembers = isAdmin || isManager;
 
-    var entries =
-        _workspaceRepository.timeEntries.where((entry) {
-          return entry.date.isAfter(state.selectedRange.start.subtract(const Duration(days: 1))) &&
-              entry.date.isBefore(state.selectedRange.end.add(const Duration(days: 1)));
-        }).toList();
+    emit(state.copyWith(isLoading: true));
+
+    final rangeStart = DateTime(
+      state.selectedRange.start.year,
+      state.selectedRange.start.month,
+      state.selectedRange.start.day,
+    );
+    final rangeEnd = DateTime(
+      state.selectedRange.end.year,
+      state.selectedRange.end.month,
+      state.selectedRange.end.day,
+    );
+
+    var entries = await _timeEntriesRepository.fetchByDateRange(
+      start: rangeStart,
+      end: rangeEnd,
+    );
+    if (requestToken != _syncRequestToken) return;
 
     final visibleUserIds = _workspaceRepository.getVisibleUserIds(
       isAdmin: isAdmin,
@@ -77,7 +119,10 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     );
 
     if (!isAdmin) {
-      entries = entries.where((e) => visibleUserIds.contains(e.createdByUserId)).toList();
+      entries =
+          entries
+              .where((e) => visibleUserIds.contains(e.createdByUserId))
+              .toList();
     }
 
     if (selectedMemberIds.isNotEmpty) {
@@ -88,25 +133,53 @@ class ReportsCubit extends BaseCubit<ReportsState> {
               .whereType<String>()
               .toSet();
 
-      entries = entries.where((e) => selectedFirebaseUids.contains(e.createdByUserId)).toList();
+      entries =
+          entries
+              .where((e) => selectedFirebaseUids.contains(e.createdByUserId))
+              .toList();
     }
 
     if (state.selectedProjectIds.isNotEmpty) {
-      entries = entries.where((e) => e.projectId != null && state.selectedProjectIds.contains(e.projectId)).toList();
+      entries =
+          entries
+              .where(
+                (e) =>
+                    e.projectId != null &&
+                    state.selectedProjectIds.contains(e.projectId),
+              )
+              .toList();
     }
 
     if (state.selectedClientIds.isNotEmpty) {
       final projectsForClients =
           _workspaceRepository.projects
-              .where((p) => p.clientId != null && state.selectedClientIds.contains(p.clientId))
+              .where(
+                (p) =>
+                    p.clientId != null &&
+                    state.selectedClientIds.contains(p.clientId),
+              )
               .map((p) => p.id)
               .toSet();
 
-      entries = entries.where((e) => e.projectId != null && projectsForClients.contains(e.projectId)).toList();
+      entries =
+          entries
+              .where(
+                (e) =>
+                    e.projectId != null &&
+                    projectsForClients.contains(e.projectId),
+              )
+              .toList();
     }
 
     if (state.selectedTagIds.isNotEmpty) {
-      entries = entries.where((e) => e.tagIds.any((tagId) => state.selectedTagIds.contains(tagId))).toList();
+      entries =
+          entries
+              .where(
+                (e) => e.tagIds.any(
+                  (tagId) => state.selectedTagIds.contains(tagId),
+                ),
+              )
+              .toList();
     }
 
     entries.sort((a, b) {
@@ -128,10 +201,15 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     final minutesByProject = <String, int>{};
     for (final entry in entries) {
       final projectId = entry.projectId ?? 'unassigned';
-      minutesByProject[projectId] = (minutesByProject[projectId] ?? 0) + entry.durationMinutes;
+      minutesByProject[projectId] =
+          (minutesByProject[projectId] ?? 0) + entry.durationMinutes;
     }
 
-    final uniqueDays = entries.map((e) => DateFormat('yyyy-MM-dd').format(e.date)).toSet().length;
+    final uniqueDays =
+        entries
+            .map((e) => DateFormat('yyyy-MM-dd').format(e.date))
+            .toSet()
+            .length;
 
     final totalMinutes = entries.fold(0, (sum, e) => sum + e.durationMinutes);
 
@@ -140,11 +218,19 @@ class ReportsCubit extends BaseCubit<ReportsState> {
         state.selectedClientIds.isNotEmpty ||
         state.selectedTagIds.isNotEmpty ||
         (canChangeMembers && selectedMemberIds.isNotEmpty);
+    _allMatchingEntries = entries;
+    final visibleCount = _visibleEntriesLimit.clamp(
+      0,
+      _allMatchingEntries.length,
+    );
+    final visibleEntries = _allMatchingEntries.take(visibleCount).toList();
 
     emit(
       state.copyWith(
         selectedMemberIds: selectedMemberIds,
-        filteredEntries: entries,
+        filteredEntries: visibleEntries,
+        totalMatchingEntries: _allMatchingEntries.length,
+        hasMoreEntries: visibleCount < _allMatchingEntries.length,
         minutesByProject: minutesByProject,
         totalMinutes: totalMinutes,
         uniqueDays: uniqueDays,
@@ -154,68 +240,116 @@ class ReportsCubit extends BaseCubit<ReportsState> {
         tags: _workspaceRepository.tags,
         canChangeMembers: canChangeMembers,
         hasFilters: hasFilters,
+        isLoading: false,
       ),
     );
   }
 
   void setPeriod(ReportPeriod period) {
     if (period == ReportPeriod.custom) return;
-    emit(state.copyWith(selectedPeriod: period, selectedRange: period.getDateRange()));
-    _syncFromSources();
+    _resetPagination();
+    emit(
+      state.copyWith(
+        selectedPeriod: period,
+        selectedRange: period.getDateRange(),
+      ),
+    );
+    _scheduleSync(immediate: true);
   }
 
   void setCustomRange(DateTimeRange range) {
-    emit(state.copyWith(selectedPeriod: ReportPeriod.custom, selectedRange: range));
-    _syncFromSources();
+    _resetPagination();
+    emit(
+      state.copyWith(selectedPeriod: ReportPeriod.custom, selectedRange: range),
+    );
+    _scheduleSync(immediate: true);
   }
 
   void setSelectedProjectIds(List<String> ids) {
+    _resetPagination();
     emit(state.copyWith(selectedProjectIds: ids));
-    _syncFromSources();
+    _scheduleSync();
   }
 
   void setSelectedClientIds(List<String> ids) {
+    _resetPagination();
     emit(state.copyWith(selectedClientIds: ids));
-    _syncFromSources();
+    _scheduleSync();
   }
 
   void setSelectedTagIds(List<String> ids) {
+    _resetPagination();
     emit(state.copyWith(selectedTagIds: ids));
-    _syncFromSources();
+    _scheduleSync();
   }
 
   void setSelectedMemberIds(List<String> ids) {
     if (!state.canChangeMembers) return;
+    _resetPagination();
     emit(state.copyWith(selectedMemberIds: ids));
-    _syncFromSources();
+    _scheduleSync();
   }
 
   void clearFilters() {
     final isAdmin = _authDataProvider.isAdmin;
     final isManager = _authDataProvider.isManager;
-    final currentMember = _workspaceRepository.getCurrentUserTeamMember(_authDataProvider.currentUserId);
+    final currentMember = _workspaceRepository.getCurrentUserTeamMember(
+      _authDataProvider.currentUserId,
+    );
 
-    final memberIds = (!isAdmin && !isManager && currentMember != null) ? [currentMember.id] : <String>[];
+    final memberIds =
+        (!isAdmin && !isManager && currentMember != null)
+            ? [currentMember.id]
+            : <String>[];
 
     emit(
-      state.copyWith(selectedProjectIds: [], selectedClientIds: [], selectedTagIds: [], selectedMemberIds: memberIds),
+      state.copyWith(
+        selectedProjectIds: [],
+        selectedClientIds: [],
+        selectedTagIds: [],
+        selectedMemberIds: memberIds,
+      ),
     );
-    _syncFromSources();
+    _resetPagination();
+    _scheduleSync();
   }
 
   void setSortBy(SortBy sortBy) {
+    _resetPagination();
     emit(state.copyWith(sortBy: sortBy));
-    _syncFromSources();
+    _scheduleSync();
   }
 
   void toggleSortDirection() {
+    _resetPagination();
     emit(state.copyWith(sortDescending: !state.sortDescending));
-    _syncFromSources();
+    _scheduleSync();
   }
 
   void setGroupBy(GroupBy groupBy) {
+    _resetPagination();
     emit(state.copyWith(groupBy: groupBy));
-    _syncFromSources();
+    _scheduleSync();
+  }
+
+  void loadMoreEntries() {
+    if (!state.hasMoreEntries || _allMatchingEntries.isEmpty) return;
+
+    _visibleEntriesLimit += _pageSize;
+    final visibleCount = _visibleEntriesLimit.clamp(
+      0,
+      _allMatchingEntries.length,
+    );
+    emit(
+      state.copyWith(
+        filteredEntries: _allMatchingEntries.take(visibleCount).toList(),
+        hasMoreEntries: visibleCount < _allMatchingEntries.length,
+      ),
+    );
+  }
+
+  void _resetPagination() {
+    _visibleEntriesLimit = _pageSize;
   }
 
   Project? getProjectById(String? id) {
@@ -237,25 +371,44 @@ class ReportsCubit extends BaseCubit<ReportsState> {
   }
 
   Future<void> exportToCsv() async {
-    if (state.filteredEntries.isEmpty) {
-      emit(state.copyWith(toastMessage: 'No entries to export', toastType: AppToastType.info));
+    final entriesToExport =
+        _allMatchingEntries.isEmpty
+            ? state.filteredEntries
+            : _allMatchingEntries;
+    if (entriesToExport.isEmpty) {
+      emit(
+        state.copyWith(
+          toastMessage: 'No entries to export',
+          toastType: AppToastType.info,
+        ),
+      );
       return;
     }
 
-    final csvContent = _buildDetailedCsv(state.filteredEntries);
-    final fileName = 'time-report-detailed-${DateFormat('yyyyMMdd-HHmm').format(DateTime.now())}.csv';
+    final csvContent = _buildDetailedCsv(entriesToExport);
+    final fileName =
+        'time-report-detailed-${DateFormat('yyyyMMdd-HHmm').format(DateTime.now())}.csv';
 
-    final downloaded = await csv_download.downloadCsv(fileName: fileName, csvContent: csvContent);
+    final downloaded = await csv_download.downloadCsv(
+      fileName: fileName,
+      csvContent: csvContent,
+    );
 
     if (downloaded) {
-      emit(state.copyWith(toastMessage: 'CSV downloaded: $fileName', toastType: AppToastType.success));
+      emit(
+        state.copyWith(
+          toastMessage: 'CSV downloaded: $fileName',
+          toastType: AppToastType.success,
+        ),
+      );
       return;
     }
 
     await Clipboard.setData(ClipboardData(text: csvContent));
     emit(
       state.copyWith(
-        toastMessage: 'CSV copied to clipboard (download unsupported on this platform).',
+        toastMessage:
+            'CSV copied to clipboard (download unsupported on this platform).',
         toastType: AppToastType.info,
       ),
     );
@@ -263,7 +416,10 @@ class ReportsCubit extends BaseCubit<ReportsState> {
 
   Future<void> exportToPdf() async {
     final pdf = pw.Document();
-    final entries = state.filteredEntries;
+    final entries =
+        _allMatchingEntries.isEmpty
+            ? state.filteredEntries
+            : _allMatchingEntries;
     final totalMinutes = entries.fold(0, (sum, e) => sum + e.durationMinutes);
 
     pw.Font? font;
@@ -281,11 +437,22 @@ class ReportsCubit extends BaseCubit<ReportsState> {
             (context) => pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Time Report', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, font: font)),
+                pw.Text(
+                  'Time Report',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                    font: font,
+                  ),
+                ),
                 pw.SizedBox(height: 8),
                 pw.Text(
                   '${DateFormat('MMM d, yyyy').format(state.selectedRange.start)} - ${DateFormat('MMM d, yyyy').format(state.selectedRange.end)}',
-                  style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700, font: font),
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    color: PdfColors.grey700,
+                    font: font,
+                  ),
                 ),
                 pw.SizedBox(height: 16),
                 pw.Divider(),
@@ -298,11 +465,19 @@ class ReportsCubit extends BaseCubit<ReportsState> {
               children: [
                 pw.Text(
                   'Generated: ${DateFormat('MMM d, yyyy HH:mm').format(DateTime.now())}',
-                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600, font: font),
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    color: PdfColors.grey600,
+                    font: font,
+                  ),
                 ),
                 pw.Text(
                   'Page ${context.pageNumber} of ${context.pagesCount}',
-                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600, font: font),
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    color: PdfColors.grey600,
+                    font: font,
+                  ),
                 ),
               ],
             ),
@@ -310,11 +485,23 @@ class ReportsCubit extends BaseCubit<ReportsState> {
             (context) => [
               ..._buildPdfFilters(font: font),
               pw.SizedBox(height: 24),
-              pw.Text('Time Entries', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, font: font)),
+              pw.Text(
+                'Time Entries',
+                style: pw.TextStyle(
+                  fontSize: 16,
+                  fontWeight: pw.FontWeight.bold,
+                  font: font,
+                ),
+              ),
               pw.SizedBox(height: 4),
               pw.Text(
                 'Total: ${_formatMinutes(totalMinutes)}',
-                style: pw.TextStyle(fontSize: 12, color: PdfColors.blue700, fontWeight: pw.FontWeight.bold, font: font),
+                style: pw.TextStyle(
+                  fontSize: 12,
+                  color: PdfColors.blue700,
+                  fontWeight: pw.FontWeight.bold,
+                  font: font,
+                ),
               ),
               pw.SizedBox(height: 12),
               pw.Table(
@@ -327,7 +514,9 @@ class ReportsCubit extends BaseCubit<ReportsState> {
                 },
                 children: [
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                    decoration: const pw.BoxDecoration(
+                      color: PdfColors.grey200,
+                    ),
                     children: [
                       _buildPdfTableHeader('Date', font: font),
                       _buildPdfTableHeader('Description', font: font),
@@ -339,7 +528,10 @@ class ReportsCubit extends BaseCubit<ReportsState> {
                     final project = getProjectById(entry.projectId);
                     return pw.TableRow(
                       children: [
-                        _buildPdfTableCell(DateFormat('MMM d').format(entry.date), font: font),
+                        _buildPdfTableCell(
+                          DateFormat('MMM d').format(entry.date),
+                          font: font,
+                        ),
                         _buildPdfTableCell(entry.description, font: font),
                         _buildPdfTableCell(project?.name ?? '-', font: font),
                         _buildPdfTableCell(entry.formattedDuration, font: font),
@@ -350,7 +542,14 @@ class ReportsCubit extends BaseCubit<ReportsState> {
               ),
               if (entries.isNotEmpty) ...[
                 pw.SizedBox(height: 24),
-                pw.Text('By Project', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, font: font)),
+                pw.Text(
+                  'By Project',
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                    font: font,
+                  ),
+                ),
                 pw.SizedBox(height: 12),
                 ..._buildPdfProjectBreakdown(entries, totalMinutes, font: font),
               ],
@@ -394,9 +593,15 @@ class ReportsCubit extends BaseCubit<ReportsState> {
       );
 
       final project = getProjectById(entry.projectId);
-      final client = project?.clientId != null ? getClientById(project!.clientId) : null;
+      final client =
+          project?.clientId != null ? getClientById(project!.clientId) : null;
 
-      final tags = entry.tagIds.map((id) => getTagById(id)).whereType<Tag>().map((t) => t.name).toList();
+      final tags =
+          entry.tagIds
+              .map((id) => getTagById(id))
+              .whereType<Tag>()
+              .map((t) => t.name)
+              .toList();
 
       final start = entry.startTime ?? entry.date;
       final stop = start.add(Duration(minutes: entry.durationMinutes));
@@ -437,14 +642,24 @@ class ReportsCubit extends BaseCubit<ReportsState> {
   pw.Widget _buildPdfTableHeader(String text, {pw.Font? font}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(8),
-      child: pw.Text(text, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10, font: font)),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontWeight: pw.FontWeight.bold,
+          fontSize: 10,
+          font: font,
+        ),
+      ),
     );
   }
 
   pw.Widget _buildPdfTableCell(String text, {pw.Font? font}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(8),
-      child: pw.Text(text, style: pw.TextStyle(fontSize: 9, font: font, fontFallback: [font!])),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(fontSize: 9, font: font, fontFallback: [font!]),
+      ),
     );
   }
 
@@ -452,7 +667,11 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     final filters = <pw.Widget>[];
 
     if (state.selectedMemberIds.isNotEmpty) {
-      final memberNames = state.selectedMemberIds.map((id) => getTeamMemberById(id)?.name).whereType<String>().toList();
+      final memberNames =
+          state.selectedMemberIds
+              .map((id) => getTeamMemberById(id)?.name)
+              .whereType<String>()
+              .toList();
       if (memberNames.isNotEmpty) {
         filters.add(
           pw.Container(
@@ -460,8 +679,20 @@ class ReportsCubit extends BaseCubit<ReportsState> {
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Members: ', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, font: font)),
-                pw.Expanded(child: pw.Text(memberNames.join(', '), style: pw.TextStyle(fontSize: 10, font: font))),
+                pw.Text(
+                  'Members: ',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    font: font,
+                  ),
+                ),
+                pw.Expanded(
+                  child: pw.Text(
+                    memberNames.join(', '),
+                    style: pw.TextStyle(fontSize: 10, font: font),
+                  ),
+                ),
               ],
             ),
           ),
@@ -470,7 +701,11 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     }
 
     if (state.selectedProjectIds.isNotEmpty) {
-      final projectNames = state.selectedProjectIds.map((id) => getProjectById(id)?.name).whereType<String>().toList();
+      final projectNames =
+          state.selectedProjectIds
+              .map((id) => getProjectById(id)?.name)
+              .whereType<String>()
+              .toList();
       if (projectNames.isNotEmpty) {
         filters.add(
           pw.Container(
@@ -478,8 +713,20 @@ class ReportsCubit extends BaseCubit<ReportsState> {
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Projects: ', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, font: font)),
-                pw.Expanded(child: pw.Text(projectNames.join(', '), style: pw.TextStyle(fontSize: 10, font: font))),
+                pw.Text(
+                  'Projects: ',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    font: font,
+                  ),
+                ),
+                pw.Expanded(
+                  child: pw.Text(
+                    projectNames.join(', '),
+                    style: pw.TextStyle(fontSize: 10, font: font),
+                  ),
+                ),
               ],
             ),
           ),
@@ -488,7 +735,11 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     }
 
     if (state.selectedClientIds.isNotEmpty) {
-      final clientNames = state.selectedClientIds.map((id) => getClientById(id)?.name).whereType<String>().toList();
+      final clientNames =
+          state.selectedClientIds
+              .map((id) => getClientById(id)?.name)
+              .whereType<String>()
+              .toList();
       if (clientNames.isNotEmpty) {
         filters.add(
           pw.Container(
@@ -496,8 +747,20 @@ class ReportsCubit extends BaseCubit<ReportsState> {
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Clients: ', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, font: font)),
-                pw.Expanded(child: pw.Text(clientNames.join(', '), style: pw.TextStyle(fontSize: 10, font: font))),
+                pw.Text(
+                  'Clients: ',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    font: font,
+                  ),
+                ),
+                pw.Expanded(
+                  child: pw.Text(
+                    clientNames.join(', '),
+                    style: pw.TextStyle(fontSize: 10, font: font),
+                  ),
+                ),
               ],
             ),
           ),
@@ -506,7 +769,11 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     }
 
     if (state.selectedTagIds.isNotEmpty) {
-      final tagNames = state.selectedTagIds.map((id) => getTagById(id)?.name).whereType<String>().toList();
+      final tagNames =
+          state.selectedTagIds
+              .map((id) => getTagById(id)?.name)
+              .whereType<String>()
+              .toList();
       if (tagNames.isNotEmpty) {
         filters.add(
           pw.Container(
@@ -514,8 +781,20 @@ class ReportsCubit extends BaseCubit<ReportsState> {
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text('Tags: ', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, font: font)),
-                pw.Expanded(child: pw.Text(tagNames.join(', '), style: pw.TextStyle(fontSize: 10, font: font))),
+                pw.Text(
+                  'Tags: ',
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    font: font,
+                  ),
+                ),
+                pw.Expanded(
+                  child: pw.Text(
+                    tagNames.join(', '),
+                    style: pw.TextStyle(fontSize: 10, font: font),
+                  ),
+                ),
               ],
             ),
           ),
@@ -530,11 +809,21 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     return [
       pw.Container(
         padding: const pw.EdgeInsets.all(12),
-        decoration: pw.BoxDecoration(color: PdfColors.grey100, borderRadius: pw.BorderRadius.circular(8)),
+        decoration: pw.BoxDecoration(
+          color: PdfColors.grey100,
+          borderRadius: pw.BorderRadius.circular(8),
+        ),
         child: pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text('Filters', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, font: font)),
+            pw.Text(
+              'Filters',
+              style: pw.TextStyle(
+                fontSize: 12,
+                fontWeight: pw.FontWeight.bold,
+                font: font,
+              ),
+            ),
             pw.SizedBox(height: 8),
             ...filters,
           ],
@@ -543,18 +832,26 @@ class ReportsCubit extends BaseCubit<ReportsState> {
     ];
   }
 
-  List<pw.Widget> _buildPdfProjectBreakdown(List<TimeEntry> entries, int totalMinutes, {pw.Font? font}) {
+  List<pw.Widget> _buildPdfProjectBreakdown(
+    List<TimeEntry> entries,
+    int totalMinutes, {
+    pw.Font? font,
+  }) {
     final minutesByProject = <String, int>{};
     for (final entry in entries) {
       final projectId = entry.projectId ?? 'unassigned';
-      minutesByProject[projectId] = (minutesByProject[projectId] ?? 0) + entry.durationMinutes;
+      minutesByProject[projectId] =
+          (minutesByProject[projectId] ?? 0) + entry.durationMinutes;
     }
 
-    final sorted = minutesByProject.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted =
+        minutesByProject.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
 
     return sorted.map((e) {
       final project = e.key != 'unassigned' ? getProjectById(e.key) : null;
-      final percentage = totalMinutes > 0 ? (e.value / totalMinutes * 100) : 0.0;
+      final percentage =
+          totalMinutes > 0 ? (e.value / totalMinutes * 100) : 0.0;
 
       return pw.Container(
         margin: const pw.EdgeInsets.only(bottom: 8),
@@ -562,7 +859,10 @@ class ReportsCubit extends BaseCubit<ReportsState> {
           children: [
             pw.Expanded(
               flex: 2,
-              child: pw.Text(project?.name ?? 'Unassigned', style: pw.TextStyle(fontSize: 10, font: font)),
+              child: pw.Text(
+                project?.name ?? 'Unassigned',
+                style: pw.TextStyle(fontSize: 10, font: font),
+              ),
             ),
             pw.Expanded(
               flex: 4,
@@ -572,14 +872,20 @@ class ReportsCubit extends BaseCubit<ReportsState> {
                     flex: (percentage * 1000).round().clamp(0, 100000),
                     child: pw.Container(
                       height: 16,
-                      decoration: pw.BoxDecoration(color: PdfColors.blue300, borderRadius: pw.BorderRadius.circular(4)),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.blue300,
+                        borderRadius: pw.BorderRadius.circular(4),
+                      ),
                     ),
                   ),
                   pw.Expanded(
                     flex: ((100 - percentage) * 1000).round().clamp(0, 100000),
                     child: pw.Container(
                       height: 16,
-                      decoration: pw.BoxDecoration(color: PdfColors.grey200, borderRadius: pw.BorderRadius.circular(4)),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.grey200,
+                        borderRadius: pw.BorderRadius.circular(4),
+                      ),
                     ),
                   ),
                 ],
@@ -615,8 +921,9 @@ class ReportsCubit extends BaseCubit<ReportsState> {
 
   @override
   void dispose() {
-    _workspaceRepository.removeListener(_syncFromSources);
-    _authDataProvider.removeListener(_syncFromSources);
+    _syncDebounce?.cancel();
+    _workspaceRepository.removeListener(_scheduleSync);
+    _authDataProvider.removeListener(_scheduleSync);
     super.dispose();
   }
 }

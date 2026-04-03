@@ -16,6 +16,11 @@ class WeeklyCalendarState with _$WeeklyCalendarState {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final normalized = DateTime(weekStart.year, weekStart.month, weekStart.day);
-    return WeeklyCalendarState(weekStart: normalized, weekEntries: const [], weekTotalMinutes: 0, currentUserId: null);
+    return WeeklyCalendarState(
+      weekStart: normalized,
+      weekEntries: const [],
+      weekTotalMinutes: 0,
+      currentUserId: null,
+    );
   }
 }

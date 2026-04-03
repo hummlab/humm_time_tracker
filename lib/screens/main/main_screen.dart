@@ -36,7 +36,10 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _openOrganizationSetup() async {
     final beforeOrgId = _cubit.state.activeOrganizationId;
-    await Navigator.push(context, MaterialPageRoute(builder: (context) => const OrganizationSetupScreen()));
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const OrganizationSetupScreen()),
+    );
     if (!mounted) return;
 
     await _cubit.refreshOrganizationsAndReload(beforeOrgId);
@@ -85,12 +88,22 @@ class _MainScreenState extends State<MainScreen> {
           label: 'Clients',
           subtitle: 'Manage your clients',
         ),
-        NavItem(icon: Icons.people_outline, selectedIcon: Icons.people, label: 'Team', subtitle: 'Manage team members'),
+        NavItem(
+          icon: Icons.people_outline,
+          selectedIcon: Icons.people,
+          label: 'Team',
+          subtitle: 'Manage team members',
+        ),
       ]);
     }
 
     items.add(
-      NavItem(icon: Icons.label_outline, selectedIcon: Icons.label, label: 'Tags', subtitle: 'Organize with tags'),
+      NavItem(
+        icon: Icons.label_outline,
+        selectedIcon: Icons.label,
+        label: 'Tags',
+        subtitle: 'Organize with tags',
+      ),
     );
 
     // Reports tab available for all users
@@ -115,7 +128,12 @@ class _MainScreenState extends State<MainScreen> {
     ];
 
     if (hasManagerAccess) {
-      screens.addAll([const ApproveHoursScreen(), const ProjectsScreen(), const ClientsScreen(), const TeamScreen()]);
+      screens.addAll([
+        const ApproveHoursScreen(),
+        const ProjectsScreen(),
+        const ClientsScreen(),
+        const TeamScreen(),
+      ]);
     }
 
     screens.add(const TagsScreen());
@@ -129,7 +147,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _cubit = MainCubit(AppDependencies.instance.authDataProvider, AppDependencies.instance.timeDataProvider);
+    _cubit = MainCubit(
+      AppDependencies.instance.authDataProvider,
+      AppDependencies.instance.timeDataProvider,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _cubit.initTimeData();
     });
@@ -154,6 +175,7 @@ class _MainScreenState extends State<MainScreen> {
 
         final navItems = _getNavItems(state.hasManagerAccess);
         final screens = _getScreens(state.hasManagerAccess);
+        final hiddenMobileTabs = MainBottomNav.hiddenIndices(navItems);
 
         var selectedIndex = state.selectedIndex;
         if (selectedIndex >= navItems.length) {
@@ -164,37 +186,57 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         return Scaffold(
-          body: Row(
-            children: [
-              if (isDesktop)
-                MainNavigationRail(
-                  navItems: navItems,
-                  state: state,
-                  onSelectTab: _cubit.selectTab,
-                  roleColor: _getRoleColor(state),
-                  roleIcon: _getRoleIcon(state),
+          body: SafeArea(
+            bottom: false,
+            child: Row(
+              children: [
+                if (isDesktop)
+                  MainNavigationRail(
+                    navItems: navItems,
+                    state: state,
+                    onSelectTab: _cubit.selectTab,
+                    roleColor: _getRoleColor(state),
+                    roleIcon: _getRoleIcon(state),
+                  ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      if (isDesktop)
+                        MainHeader(
+                          isDesktop: true,
+                          navItems: navItems,
+                          state: state,
+                          onSwitchOrganization: _switchOrganization,
+                          onOpenOrganizationSetup: _openOrganizationSetup,
+                          onSignOut: _cubit.signOut,
+                          roleColor: _getRoleColor(state),
+                          roleIcon: _getRoleIcon(state),
+                        )
+                      else
+                        _MobileOrganizationBar(
+                          state: state,
+                          navItems: navItems,
+                          hiddenTabIndices: hiddenMobileTabs,
+                          onSelectTab: _cubit.selectTab,
+                          onSwitchOrganization: _switchOrganization,
+                          onOpenOrganizationSetup: _openOrganizationSetup,
+                          onSignOut: _cubit.signOut,
+                        ),
+                      Expanded(child: screens[selectedIndex]),
+                    ],
+                  ),
                 ),
-              Expanded(
-                child: Column(
-                  children: [
-                    MainHeader(
-                      isDesktop: isDesktop,
-                      navItems: navItems,
-                      state: state,
-                      onSwitchOrganization: _switchOrganization,
-                      onOpenOrganizationSetup: _openOrganizationSetup,
-                      onSignOut: _cubit.signOut,
-                      roleColor: _getRoleColor(state),
-                      roleIcon: _getRoleIcon(state),
-                    ),
-                    Expanded(child: screens[selectedIndex]),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           bottomNavigationBar:
-              isDesktop ? null : MainBottomNav(navItems: navItems, state: state, onSelectTab: _cubit.selectTab),
+              isDesktop
+                  ? null
+                  : MainBottomNav(
+                    navItems: navItems,
+                    state: state,
+                    onSelectTab: _cubit.selectTab,
+                  ),
         );
       },
     );
@@ -213,11 +255,208 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
+class _MobileOrganizationBar extends StatelessWidget {
+  const _MobileOrganizationBar({
+    required this.state,
+    required this.navItems,
+    required this.hiddenTabIndices,
+    required this.onSelectTab,
+    required this.onSwitchOrganization,
+    required this.onOpenOrganizationSetup,
+    required this.onSignOut,
+  });
+
+  final MainState state;
+  final List<NavItem> navItems;
+  final List<int> hiddenTabIndices;
+  final ValueChanged<int> onSelectTab;
+  final ValueChanged<String> onSwitchOrganization;
+  final VoidCallback onOpenOrganizationSetup;
+  final VoidCallback onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    final organizations = state.organizations;
+    final hasMultipleOrganizations = organizations.length > 1;
+    String? activeOrganizationName;
+    for (final organization in organizations) {
+      if (organization.id == state.activeOrganizationId) {
+        activeOrganizationName = organization.name;
+        break;
+      }
+    }
+
+    final organizationsMenuLabel =
+        state.pendingInvitesCount > 0
+            ? 'Organizations (${state.pendingInvitesCount})'
+            : 'Organizations';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: const BoxDecoration(
+        color: AppTheme.surfaceDark,
+        border: Border(bottom: BorderSide(color: AppTheme.borderDark)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child:
+                hasMultipleOrganizations
+                    ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceDark,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppTheme.borderDark),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: state.activeOrganizationId,
+                          isExpanded: true,
+                          isDense: true,
+                          dropdownColor: AppTheme.cardDark,
+                          icon: const Icon(
+                            Icons.expand_more,
+                            size: 18,
+                            color: AppTheme.textSecondary,
+                          ),
+                          items:
+                              organizations
+                                  .map(
+                                    (organization) => DropdownMenuItem<String>(
+                                      value: organization.id,
+                                      child: Text(
+                                        organization.name,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            onSwitchOrganization(value);
+                          },
+                        ),
+                      ),
+                    )
+                    : Text(
+                      activeOrganizationName ?? 'Organization',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+          ),
+          PopupMenuButton<_MobileMenuAction>(
+            tooltip: 'More',
+            color: AppTheme.cardDark,
+            icon: const Icon(Icons.more_vert, color: AppTheme.textSecondary),
+            onSelected: (action) {
+              switch (action) {
+                case _MobileMenuAction.manageOrganizations:
+                  onOpenOrganizationSetup();
+                  break;
+                case _MobileMenuAction.signOut:
+                  onSignOut();
+                  break;
+                case _MobileMenuAction.hiddenTab:
+                  break;
+              }
+            },
+            itemBuilder: (context) {
+              final items = <PopupMenuEntry<_MobileMenuAction>>[
+                PopupMenuItem(
+                  value: _MobileMenuAction.manageOrganizations,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.business_outlined,
+                        size: 16,
+                        color: AppTheme.textSecondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(organizationsMenuLabel),
+                    ],
+                  ),
+                ),
+              ];
+
+              if (hiddenTabIndices.isNotEmpty) {
+                items.add(const PopupMenuDivider(height: 6));
+                for (final index in hiddenTabIndices) {
+                  final item = navItems[index];
+                  items.add(
+                    PopupMenuItem(
+                      value: _MobileMenuAction.hiddenTab,
+                      onTap: () => onSelectTab(index),
+                      child: Row(
+                        children: [
+                          Icon(
+                            state.selectedIndex == index
+                                ? item.selectedIcon
+                                : item.icon,
+                            size: 16,
+                            color:
+                                state.selectedIndex == index
+                                    ? AppTheme.primaryAccent
+                                    : AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(item.label)),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+              }
+
+              items.add(const PopupMenuDivider(height: 6));
+              items.add(
+                const PopupMenuItem(
+                  value: _MobileMenuAction.signOut,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.logout_outlined,
+                        size: 16,
+                        color: AppTheme.textSecondary,
+                      ),
+                      SizedBox(width: 8),
+                      Text('Sign out'),
+                    ],
+                  ),
+                ),
+              );
+
+              return items;
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _MobileMenuAction { manageOrganizations, hiddenTab, signOut }
+
 class NavItem {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
   final String subtitle;
 
-  NavItem({required this.icon, required this.selectedIcon, required this.label, required this.subtitle});
+  NavItem({
+    required this.icon,
+    required this.selectedIcon,
+    required this.label,
+    required this.subtitle,
+  });
 }

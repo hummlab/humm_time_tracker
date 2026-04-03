@@ -25,15 +25,23 @@ mixin _$WeeklyCalendarState {
   /// Create a copy of WeeklyCalendarState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $WeeklyCalendarStateCopyWith<WeeklyCalendarState> get copyWith => throw _privateConstructorUsedError;
+  $WeeklyCalendarStateCopyWith<WeeklyCalendarState> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class $WeeklyCalendarStateCopyWith<$Res> {
-  factory $WeeklyCalendarStateCopyWith(WeeklyCalendarState value, $Res Function(WeeklyCalendarState) then) =
-      _$WeeklyCalendarStateCopyWithImpl<$Res, WeeklyCalendarState>;
+  factory $WeeklyCalendarStateCopyWith(
+    WeeklyCalendarState value,
+    $Res Function(WeeklyCalendarState) then,
+  ) = _$WeeklyCalendarStateCopyWithImpl<$Res, WeeklyCalendarState>;
   @useResult
-  $Res call({DateTime weekStart, List<TimeEntry> weekEntries, int weekTotalMinutes, String? currentUserId});
+  $Res call({
+    DateTime weekStart,
+    List<TimeEntry> weekEntries,
+    int weekTotalMinutes,
+    String? currentUserId,
+  });
 }
 
 /// @nodoc
@@ -85,14 +93,20 @@ class _$WeeklyCalendarStateCopyWithImpl<$Res, $Val extends WeeklyCalendarState>
 }
 
 /// @nodoc
-abstract class _$$WeeklyCalendarStateImplCopyWith<$Res> implements $WeeklyCalendarStateCopyWith<$Res> {
+abstract class _$$WeeklyCalendarStateImplCopyWith<$Res>
+    implements $WeeklyCalendarStateCopyWith<$Res> {
   factory _$$WeeklyCalendarStateImplCopyWith(
     _$WeeklyCalendarStateImpl value,
     $Res Function(_$WeeklyCalendarStateImpl) then,
   ) = __$$WeeklyCalendarStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({DateTime weekStart, List<TimeEntry> weekEntries, int weekTotalMinutes, String? currentUserId});
+  $Res call({
+    DateTime weekStart,
+    List<TimeEntry> weekEntries,
+    int weekTotalMinutes,
+    String? currentUserId,
+  });
 }
 
 /// @nodoc
@@ -176,10 +190,16 @@ class _$WeeklyCalendarStateImpl implements _WeeklyCalendarState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$WeeklyCalendarStateImpl &&
-            (identical(other.weekStart, weekStart) || other.weekStart == weekStart) &&
-            const DeepCollectionEquality().equals(other._weekEntries, _weekEntries) &&
-            (identical(other.weekTotalMinutes, weekTotalMinutes) || other.weekTotalMinutes == weekTotalMinutes) &&
-            (identical(other.currentUserId, currentUserId) || other.currentUserId == currentUserId));
+            (identical(other.weekStart, weekStart) ||
+                other.weekStart == weekStart) &&
+            const DeepCollectionEquality().equals(
+              other._weekEntries,
+              _weekEntries,
+            ) &&
+            (identical(other.weekTotalMinutes, weekTotalMinutes) ||
+                other.weekTotalMinutes == weekTotalMinutes) &&
+            (identical(other.currentUserId, currentUserId) ||
+                other.currentUserId == currentUserId));
   }
 
   @override
@@ -197,7 +217,10 @@ class _$WeeklyCalendarStateImpl implements _WeeklyCalendarState {
   @override
   @pragma('vm:prefer-inline')
   _$$WeeklyCalendarStateImplCopyWith<_$WeeklyCalendarStateImpl> get copyWith =>
-      __$$WeeklyCalendarStateImplCopyWithImpl<_$WeeklyCalendarStateImpl>(this, _$identity);
+      __$$WeeklyCalendarStateImplCopyWithImpl<_$WeeklyCalendarStateImpl>(
+        this,
+        _$identity,
+      );
 }
 
 abstract class _WeeklyCalendarState implements WeeklyCalendarState {
@@ -221,5 +244,6 @@ abstract class _WeeklyCalendarState implements WeeklyCalendarState {
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$WeeklyCalendarStateImplCopyWith<_$WeeklyCalendarStateImpl> get copyWith => throw _privateConstructorUsedError;
+  _$$WeeklyCalendarStateImplCopyWith<_$WeeklyCalendarStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

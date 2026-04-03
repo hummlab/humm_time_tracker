@@ -26,12 +26,14 @@ mixin _$TagsState {
   /// Create a copy of TagsState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $TagsStateCopyWith<TagsState> get copyWith => throw _privateConstructorUsedError;
+  $TagsStateCopyWith<TagsState> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class $TagsStateCopyWith<$Res> {
-  factory $TagsStateCopyWith(TagsState value, $Res Function(TagsState) then) = _$TagsStateCopyWithImpl<$Res, TagsState>;
+  factory $TagsStateCopyWith(TagsState value, $Res Function(TagsState) then) =
+      _$TagsStateCopyWithImpl<$Res, TagsState>;
   @useResult
   $Res call({
     List<Tag> tags,
@@ -43,7 +45,8 @@ abstract class $TagsStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$TagsStateCopyWithImpl<$Res, $Val extends TagsState> implements $TagsStateCopyWith<$Res> {
+class _$TagsStateCopyWithImpl<$Res, $Val extends TagsState>
+    implements $TagsStateCopyWith<$Res> {
   _$TagsStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
@@ -96,9 +99,12 @@ class _$TagsStateCopyWithImpl<$Res, $Val extends TagsState> implements $TagsStat
 }
 
 /// @nodoc
-abstract class _$$TagsStateImplCopyWith<$Res> implements $TagsStateCopyWith<$Res> {
-  factory _$$TagsStateImplCopyWith(_$TagsStateImpl value, $Res Function(_$TagsStateImpl) then) =
-      __$$TagsStateImplCopyWithImpl<$Res>;
+abstract class _$$TagsStateImplCopyWith<$Res>
+    implements $TagsStateCopyWith<$Res> {
+  factory _$$TagsStateImplCopyWith(
+    _$TagsStateImpl value,
+    $Res Function(_$TagsStateImpl) then,
+  ) = __$$TagsStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -111,9 +117,13 @@ abstract class _$$TagsStateImplCopyWith<$Res> implements $TagsStateCopyWith<$Res
 }
 
 /// @nodoc
-class __$$TagsStateImplCopyWithImpl<$Res> extends _$TagsStateCopyWithImpl<$Res, _$TagsStateImpl>
+class __$$TagsStateImplCopyWithImpl<$Res>
+    extends _$TagsStateCopyWithImpl<$Res, _$TagsStateImpl>
     implements _$$TagsStateImplCopyWith<$Res> {
-  __$$TagsStateImplCopyWithImpl(_$TagsStateImpl _value, $Res Function(_$TagsStateImpl) _then) : super(_value, _then);
+  __$$TagsStateImplCopyWithImpl(
+    _$TagsStateImpl _value,
+    $Res Function(_$TagsStateImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of TagsState
   /// with the given fields replaced by the non-null parameter values.
@@ -183,7 +193,8 @@ class _$TagsStateImpl implements _TagsState {
   @override
   @JsonKey()
   Map<String, int> get entryCountsByTagId {
-    if (_entryCountsByTagId is EqualUnmodifiableMapView) return _entryCountsByTagId;
+    if (_entryCountsByTagId is EqualUnmodifiableMapView)
+      return _entryCountsByTagId;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_entryCountsByTagId);
   }
@@ -207,10 +218,16 @@ class _$TagsStateImpl implements _TagsState {
         (other.runtimeType == runtimeType &&
             other is _$TagsStateImpl &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
-            const DeepCollectionEquality().equals(other._entryCountsByTagId, _entryCountsByTagId) &&
-            (identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing) &&
-            (identical(other.toastMessage, toastMessage) || other.toastMessage == toastMessage) &&
-            (identical(other.toastType, toastType) || other.toastType == toastType));
+            const DeepCollectionEquality().equals(
+              other._entryCountsByTagId,
+              _entryCountsByTagId,
+            ) &&
+            (identical(other.isProcessing, isProcessing) ||
+                other.isProcessing == isProcessing) &&
+            (identical(other.toastMessage, toastMessage) ||
+                other.toastMessage == toastMessage) &&
+            (identical(other.toastType, toastType) ||
+                other.toastType == toastType));
   }
 
   @override
@@ -256,5 +273,6 @@ abstract class _TagsState implements TagsState {
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$TagsStateImplCopyWith<_$TagsStateImpl> get copyWith => throw _privateConstructorUsedError;
+  _$$TagsStateImplCopyWith<_$TagsStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

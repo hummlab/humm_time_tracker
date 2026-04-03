@@ -6,7 +6,7 @@ import 'package:time_tracker/models/projects/tag.dart';
 import 'package:time_tracker/screens/reports/widgets/report_filters_dropdowns.dart';
 import 'package:time_tracker/theme/app_theme.dart';
 
-class ReportsFiltersPanel extends StatelessWidget {
+class ReportsFiltersPanel extends StatefulWidget {
   const ReportsFiltersPanel({
     super.key,
     required this.isDesktop,
@@ -45,46 +45,39 @@ class ReportsFiltersPanel extends StatelessWidget {
   final ValueChanged<List<String>> onTagsChanged;
 
   @override
+  State<ReportsFiltersPanel> createState() => _ReportsFiltersPanelState();
+}
+
+class _ReportsFiltersPanelState extends State<ReportsFiltersPanel> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardDark,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderDark),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.filter_list, size: 18, color: AppTheme.primaryAccent),
-              const SizedBox(width: 8),
-              Text('Filters', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppTheme.textSecondary)),
-              const Spacer(),
-              if (hasFilters) TextButton(onPressed: onClearFilters, child: const Text('Clear All')),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (isDesktop)
-            Column(
+    final filtersContent =
+        widget.isDesktop
+            ? Column(
               children: [
                 Row(
                   children: [
                     Expanded(
                       child: ReportMembersDropdown(
-                        members: members,
-                        selectedMemberIds: selectedMemberIds,
-                        onChanged: canChangeMembers ? onMembersChanged : null,
-                        isDisabled: !canChangeMembers,
+                        members: widget.members,
+                        selectedMemberIds: widget.selectedMemberIds,
+                        onChanged:
+                            widget.canChangeMembers
+                                ? widget.onMembersChanged
+                                : null,
+                        isDisabled: !widget.canChangeMembers,
+                        compact: false,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: ReportProjectsDropdown(
-                        projects: projects,
-                        selectedProjectIds: selectedProjectIds,
-                        onChanged: onProjectsChanged,
+                        projects: widget.projects,
+                        selectedProjectIds: widget.selectedProjectIds,
+                        onChanged: widget.onProjectsChanged,
+                        compact: false,
                       ),
                     ),
                   ],
@@ -94,46 +87,159 @@ class ReportsFiltersPanel extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ReportClientsDropdown(
-                        clients: clients,
-                        selectedClientIds: selectedClientIds,
-                        onChanged: onClientsChanged,
+                        clients: widget.clients,
+                        selectedClientIds: widget.selectedClientIds,
+                        onChanged: widget.onClientsChanged,
+                        compact: false,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ReportTagsDropdown(tags: tags, selectedTagIds: selectedTagIds, onChanged: onTagsChanged),
+                      child: ReportTagsDropdown(
+                        tags: widget.tags,
+                        selectedTagIds: widget.selectedTagIds,
+                        onChanged: widget.onTagsChanged,
+                        compact: false,
+                      ),
                     ),
                   ],
                 ),
               ],
             )
-          else
-            Column(
+            : Column(
               children: [
                 ReportMembersDropdown(
-                  members: members,
-                  selectedMemberIds: selectedMemberIds,
-                  onChanged: canChangeMembers ? onMembersChanged : null,
-                  isDisabled: !canChangeMembers,
+                  members: widget.members,
+                  selectedMemberIds: widget.selectedMemberIds,
+                  onChanged:
+                      widget.canChangeMembers ? widget.onMembersChanged : null,
+                  isDisabled: !widget.canChangeMembers,
+                  compact: true,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 ReportProjectsDropdown(
-                  projects: projects,
-                  selectedProjectIds: selectedProjectIds,
-                  onChanged: onProjectsChanged,
+                  projects: widget.projects,
+                  selectedProjectIds: widget.selectedProjectIds,
+                  onChanged: widget.onProjectsChanged,
+                  compact: true,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 ReportClientsDropdown(
-                  clients: clients,
-                  selectedClientIds: selectedClientIds,
-                  onChanged: onClientsChanged,
+                  clients: widget.clients,
+                  selectedClientIds: widget.selectedClientIds,
+                  onChanged: widget.onClientsChanged,
+                  compact: true,
                 ),
-                const SizedBox(height: 12),
-                ReportTagsDropdown(tags: tags, selectedTagIds: selectedTagIds, onChanged: onTagsChanged),
+                const SizedBox(height: 8),
+                ReportTagsDropdown(
+                  tags: widget.tags,
+                  selectedTagIds: widget.selectedTagIds,
+                  onChanged: widget.onTagsChanged,
+                  compact: true,
+                ),
               ],
+            );
+
+    return Container(
+      padding: EdgeInsets.all(widget.isDesktop ? 16 : 10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardDark,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (widget.isDesktop) ...[
+            _FiltersHeader(
+              hasFilters: widget.hasFilters,
+              onClearFilters: widget.onClearFilters,
+            ),
+            const SizedBox(height: 12),
+            filtersContent,
+          ] else
+            ExpansionTile(
+              tilePadding: const EdgeInsets.symmetric(horizontal: 6),
+              childrenPadding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+              dense: true,
+              trailing: const SizedBox.shrink(),
+              shape: const Border(),
+              collapsedShape: const Border(),
+              onExpansionChanged:
+                  (value) => setState(() => _isExpanded = value),
+              initiallyExpanded: false,
+              title: _FiltersHeader(
+                hasFilters: widget.hasFilters,
+                onClearFilters: widget.onClearFilters,
+                compact: true,
+                isExpanded: _isExpanded,
+              ),
+              children: [filtersContent],
             ),
         ],
       ),
+    );
+  }
+}
+
+class _FiltersHeader extends StatelessWidget {
+  const _FiltersHeader({
+    required this.hasFilters,
+    required this.onClearFilters,
+    this.compact = false,
+    this.isExpanded = false,
+  });
+
+  final bool hasFilters;
+  final VoidCallback onClearFilters;
+  final bool compact;
+  final bool isExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Icon(Icons.filter_list, size: 16, color: AppTheme.primaryAccent),
+        const SizedBox(width: 8),
+        Text(
+          'Filters',
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(color: AppTheme.textSecondary),
+        ),
+        if (compact && hasFilters) ...[
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryAccent.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: const Text(
+              'active',
+              style: TextStyle(
+                color: AppTheme.primaryAccent,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+        const Spacer(),
+        if (hasFilters)
+          TextButton(
+            onPressed: onClearFilters,
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            ),
+            child: const Text('Clear'),
+          ),
+        if (compact)
+          Icon(
+            isExpanded ? Icons.expand_less : Icons.expand_more,
+            color: AppTheme.textMuted,
+          ),
+      ],
     );
   }
 }

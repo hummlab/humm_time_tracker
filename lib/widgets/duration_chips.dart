@@ -4,11 +4,29 @@ import '../theme/app_theme.dart';
 
 class DurationChips extends StatefulWidget {
   final int? selectedDuration;
+  final bool compact;
   final Function(int) onSelected;
 
-  const DurationChips({super.key, this.selectedDuration, required this.onSelected});
+  const DurationChips({
+    super.key,
+    this.selectedDuration,
+    this.compact = false,
+    required this.onSelected,
+  });
 
-  static const List<int> durations = [15, 30, 60, 90, 120, 180, 240, 300, 360, 420, 480];
+  static const List<int> durations = [
+    15,
+    30,
+    60,
+    90,
+    120,
+    180,
+    240,
+    300,
+    360,
+    420,
+    480,
+  ];
 
   @override
   State<DurationChips> createState() => _DurationChipsState();
@@ -35,7 +53,8 @@ class _DurationChipsState extends State<DurationChips> {
   }
 
   void _updateCustomState() {
-    if (widget.selectedDuration != null && !DurationChips.durations.contains(widget.selectedDuration)) {
+    if (widget.selectedDuration != null &&
+        !DurationChips.durations.contains(widget.selectedDuration)) {
       _isCustom = true;
       _customController.text = _formatDuration(widget.selectedDuration!);
     } else if (!_isCustom) {
@@ -86,7 +105,8 @@ class _DurationChipsState extends State<DurationChips> {
     final hoursMatch = hoursPattern.firstMatch(normalized);
     if (hoursMatch != null) {
       final hours = int.parse(hoursMatch.group(1)!);
-      final mins = hoursMatch.group(2) != null ? int.parse(hoursMatch.group(2)!) : 0;
+      final mins =
+          hoursMatch.group(2) != null ? int.parse(hoursMatch.group(2)!) : 0;
       return hours * 60 + mins;
     }
 
@@ -124,45 +144,73 @@ class _DurationChipsState extends State<DurationChips> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 4,
+          runSpacing: 4,
           children:
-              DurationChips.durations.map((duration) {
-                final isSelected = widget.selectedDuration == duration && !_isCustom;
-                return _buildChip(context, duration, isSelected);
-              }).toList(),
+              (widget.compact
+                      ? DurationChips.durations.take(6).toList()
+                      : DurationChips.durations)
+                  .map((duration) {
+                    final isSelected =
+                        widget.selectedDuration == duration && !_isCustom;
+                    return _buildChip(context, duration, isSelected);
+                  })
+                  .toList(),
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             SizedBox(
-              width: 100,
+              width: widget.compact ? 80 : 92,
               child: TextField(
                 controller: _customController,
                 focusNode: _focusNode,
                 decoration: InputDecoration(
                   hintText: '7h30m',
-                  hintStyle: const TextStyle(fontSize: 13, color: AppTheme.textMuted),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  hintStyle: TextStyle(
+                    fontSize: widget.compact ? 12 : 13,
+                    color: AppTheme.textMuted,
+                  ),
                   isDense: true,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: widget.compact ? 6 : 8,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: _isCustom ? AppTheme.primaryAccent : AppTheme.borderDark),
+                    borderSide: BorderSide(
+                      color:
+                          _isCustom
+                              ? AppTheme.primaryAccent
+                              : AppTheme.borderDark,
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: _isCustom ? AppTheme.primaryAccent : AppTheme.borderDark),
+                    borderSide: BorderSide(
+                      color:
+                          _isCustom
+                              ? AppTheme.primaryAccent
+                              : AppTheme.borderDark,
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.primaryAccent, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppTheme.primaryAccent,
+                      width: 2,
+                    ),
                   ),
                   filled: true,
-                  fillColor: _isCustom ? AppTheme.primaryAccent.withValues(alpha: 0.1) : AppTheme.surfaceDark,
+                  fillColor:
+                      _isCustom
+                          ? AppTheme.primaryAccent.withValues(alpha: 0.1)
+                          : AppTheme.surfaceDark,
                 ),
                 style: TextStyle(
-                  fontSize: 13,
-                  color: _isCustom ? AppTheme.primaryAccent : AppTheme.textPrimary,
+                  fontSize: widget.compact ? 12 : 13,
+                  color:
+                      _isCustom ? AppTheme.primaryAccent : AppTheme.textPrimary,
                   fontWeight: _isCustom ? FontWeight.w600 : FontWeight.w400,
                 ),
                 onSubmitted: (_) => _parseAndApply(),
@@ -178,7 +226,11 @@ class _DurationChipsState extends State<DurationChips> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       child: FilterChip(
-        label: Text(_formatDuration(duration)),
+        label: Text(
+          _formatDuration(duration),
+          style: TextStyle(fontSize: widget.compact ? 11 : null),
+        ),
+        visualDensity: VisualDensity.compact,
         selected: isSelected,
         onSelected: (_) {
           setState(() {
@@ -194,7 +246,9 @@ class _DurationChipsState extends State<DurationChips> {
           color: isSelected ? AppTheme.primaryAccent : AppTheme.textSecondary,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
         ),
-        side: BorderSide(color: isSelected ? AppTheme.primaryAccent : AppTheme.borderDark),
+        side: BorderSide(
+          color: isSelected ? AppTheme.primaryAccent : AppTheme.borderDark,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
     );

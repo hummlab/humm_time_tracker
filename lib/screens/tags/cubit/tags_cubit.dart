@@ -7,7 +7,8 @@ import 'package:time_tracker/widgets/app_toast.dart';
 import 'tags_state.dart';
 
 class TagsCubit extends BaseCubit<TagsState> {
-  TagsCubit(this._workspaceRepository, this._tagsRepository) : super(TagsState.initial()) {
+  TagsCubit(this._workspaceRepository, this._tagsRepository)
+    : super(TagsState.initial()) {
     _workspaceRepository.addListener(_syncFromSources);
     _syncFromSources();
   }
@@ -32,10 +33,19 @@ class TagsCubit extends BaseCubit<TagsState> {
     return state.entryCountsByTagId[tagId] ?? 0;
   }
 
-  Future<bool> saveTag({Tag? existing, required String name, required String color}) async {
+  Future<bool> saveTag({
+    Tag? existing,
+    required String name,
+    required String color,
+  }) async {
     final trimmedName = name.trim();
     if (trimmedName.isEmpty) {
-      emit(state.copyWith(toastMessage: 'Please enter a tag name', toastType: AppToastType.error));
+      emit(
+        state.copyWith(
+          toastMessage: 'Please enter a tag name',
+          toastType: AppToastType.error,
+        ),
+      );
       return false;
     }
 
@@ -43,15 +53,27 @@ class TagsCubit extends BaseCubit<TagsState> {
 
     final success =
         existing == null
-            ? await _tagsRepository.addTagSafe(Tag(id: '', name: trimmedName, color: color, createdAt: DateTime.now()))
-            : await _tagsRepository.updateTagSafe(existing.copyWith(name: trimmedName, color: color));
+            ? await _tagsRepository.addTagSafe(
+              Tag(
+                id: '',
+                name: trimmedName,
+                color: color,
+                createdAt: DateTime.now(),
+              ),
+            )
+            : await _tagsRepository.updateTagSafe(
+              existing.copyWith(name: trimmedName, color: color),
+            );
 
     emit(state.copyWith(isProcessing: false));
 
     if (!success) {
       emit(
         state.copyWith(
-          toastMessage: existing == null ? 'Failed to create tag' : 'Failed to update tag',
+          toastMessage:
+              existing == null
+                  ? 'Failed to create tag'
+                  : 'Failed to update tag',
           toastType: AppToastType.error,
         ),
       );
@@ -67,7 +89,12 @@ class TagsCubit extends BaseCubit<TagsState> {
     emit(state.copyWith(isProcessing: false));
 
     if (!success) {
-      emit(state.copyWith(toastMessage: 'Failed to delete tag', toastType: AppToastType.error));
+      emit(
+        state.copyWith(
+          toastMessage: 'Failed to delete tag',
+          toastType: AppToastType.error,
+        ),
+      );
     }
   }
 

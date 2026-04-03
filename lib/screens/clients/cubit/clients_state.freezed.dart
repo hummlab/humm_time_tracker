@@ -18,7 +18,8 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$ClientsState {
   List<Client> get clients => throw _privateConstructorUsedError;
-  Map<String, int> get projectCountsByClientId => throw _privateConstructorUsedError;
+  Map<String, int> get projectCountsByClientId =>
+      throw _privateConstructorUsedError;
   bool get isProcessing => throw _privateConstructorUsedError;
   String? get toastMessage => throw _privateConstructorUsedError;
   AppToastType? get toastType => throw _privateConstructorUsedError;
@@ -26,13 +27,16 @@ mixin _$ClientsState {
   /// Create a copy of ClientsState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $ClientsStateCopyWith<ClientsState> get copyWith => throw _privateConstructorUsedError;
+  $ClientsStateCopyWith<ClientsState> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class $ClientsStateCopyWith<$Res> {
-  factory $ClientsStateCopyWith(ClientsState value, $Res Function(ClientsState) then) =
-      _$ClientsStateCopyWithImpl<$Res, ClientsState>;
+  factory $ClientsStateCopyWith(
+    ClientsState value,
+    $Res Function(ClientsState) then,
+  ) = _$ClientsStateCopyWithImpl<$Res, ClientsState>;
   @useResult
   $Res call({
     List<Client> clients,
@@ -44,7 +48,8 @@ abstract class $ClientsStateCopyWith<$Res> {
 }
 
 /// @nodoc
-class _$ClientsStateCopyWithImpl<$Res, $Val extends ClientsState> implements $ClientsStateCopyWith<$Res> {
+class _$ClientsStateCopyWithImpl<$Res, $Val extends ClientsState>
+    implements $ClientsStateCopyWith<$Res> {
   _$ClientsStateCopyWithImpl(this._value, this._then);
 
   // ignore: unused_field
@@ -97,9 +102,12 @@ class _$ClientsStateCopyWithImpl<$Res, $Val extends ClientsState> implements $Cl
 }
 
 /// @nodoc
-abstract class _$$ClientsStateImplCopyWith<$Res> implements $ClientsStateCopyWith<$Res> {
-  factory _$$ClientsStateImplCopyWith(_$ClientsStateImpl value, $Res Function(_$ClientsStateImpl) then) =
-      __$$ClientsStateImplCopyWithImpl<$Res>;
+abstract class _$$ClientsStateImplCopyWith<$Res>
+    implements $ClientsStateCopyWith<$Res> {
+  factory _$$ClientsStateImplCopyWith(
+    _$ClientsStateImpl value,
+    $Res Function(_$ClientsStateImpl) then,
+  ) = __$$ClientsStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -112,10 +120,13 @@ abstract class _$$ClientsStateImplCopyWith<$Res> implements $ClientsStateCopyWit
 }
 
 /// @nodoc
-class __$$ClientsStateImplCopyWithImpl<$Res> extends _$ClientsStateCopyWithImpl<$Res, _$ClientsStateImpl>
+class __$$ClientsStateImplCopyWithImpl<$Res>
+    extends _$ClientsStateCopyWithImpl<$Res, _$ClientsStateImpl>
     implements _$$ClientsStateImplCopyWith<$Res> {
-  __$$ClientsStateImplCopyWithImpl(_$ClientsStateImpl _value, $Res Function(_$ClientsStateImpl) _then)
-    : super(_value, _then);
+  __$$ClientsStateImplCopyWithImpl(
+    _$ClientsStateImpl _value,
+    $Res Function(_$ClientsStateImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of ClientsState
   /// with the given fields replaced by the non-null parameter values.
@@ -185,7 +196,8 @@ class _$ClientsStateImpl implements _ClientsState {
   @override
   @JsonKey()
   Map<String, int> get projectCountsByClientId {
-    if (_projectCountsByClientId is EqualUnmodifiableMapView) return _projectCountsByClientId;
+    if (_projectCountsByClientId is EqualUnmodifiableMapView)
+      return _projectCountsByClientId;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_projectCountsByClientId);
   }
@@ -209,10 +221,16 @@ class _$ClientsStateImpl implements _ClientsState {
         (other.runtimeType == runtimeType &&
             other is _$ClientsStateImpl &&
             const DeepCollectionEquality().equals(other._clients, _clients) &&
-            const DeepCollectionEquality().equals(other._projectCountsByClientId, _projectCountsByClientId) &&
-            (identical(other.isProcessing, isProcessing) || other.isProcessing == isProcessing) &&
-            (identical(other.toastMessage, toastMessage) || other.toastMessage == toastMessage) &&
-            (identical(other.toastType, toastType) || other.toastType == toastType));
+            const DeepCollectionEquality().equals(
+              other._projectCountsByClientId,
+              _projectCountsByClientId,
+            ) &&
+            (identical(other.isProcessing, isProcessing) ||
+                other.isProcessing == isProcessing) &&
+            (identical(other.toastMessage, toastMessage) ||
+                other.toastMessage == toastMessage) &&
+            (identical(other.toastType, toastType) ||
+                other.toastType == toastType));
   }
 
   @override
@@ -258,5 +276,6 @@ abstract class _ClientsState implements ClientsState {
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$ClientsStateImplCopyWith<_$ClientsStateImpl> get copyWith => throw _privateConstructorUsedError;
+  _$$ClientsStateImplCopyWith<_$ClientsStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

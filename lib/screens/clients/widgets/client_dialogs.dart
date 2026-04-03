@@ -5,7 +5,11 @@ import 'package:time_tracker/theme/app_theme.dart';
 Future<void> showClientDialog({
   required BuildContext context,
   required Client? client,
-  required Future<bool> Function({required Client? existing, required String name, required List<String> linkedEmails})
+  required Future<bool> Function({
+    required Client? existing,
+    required String name,
+    required List<String> linkedEmails,
+  })
   onSave,
 }) async {
   final nameController = TextEditingController(text: client?.name ?? '');
@@ -47,7 +51,10 @@ Future<void> showClientDialog({
                       autofocus: true,
                     ),
                     const SizedBox(height: 24),
-                    Text('Client Portal Access', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Client Portal Access',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Add email addresses that can access the client dashboard',
@@ -101,10 +108,17 @@ Future<void> showClientDialog({
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
               ElevatedButton(
                 onPressed: () async {
-                  final success = await onSave(existing: client, name: nameController.text, linkedEmails: linkedEmails);
+                  final success = await onSave(
+                    existing: client,
+                    name: nameController.text,
+                    linkedEmails: linkedEmails,
+                  );
                   if (!context.mounted) return;
                   if (success) {
                     Navigator.pop(context, true);
@@ -133,16 +147,23 @@ Future<void> showDeleteClientDialog({
     builder: (context) {
       return AlertDialog(
         title: const Text('Delete Client'),
-        content: Text('Are you sure you want to delete "${client.name}"? This cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete "${client.name}"? This cannot be undone.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () async {
               await onDelete(client);
               if (!context.mounted) return;
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.tertiaryAccent),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.tertiaryAccent,
+            ),
             child: const Text('Delete'),
           ),
         ],

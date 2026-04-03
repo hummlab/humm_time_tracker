@@ -5,11 +5,18 @@ import 'package:time_tracker/screens/reports/widgets/report_filters_pickers.dart
 import 'package:time_tracker/theme/app_theme.dart';
 
 class ReportTagsDropdown extends StatefulWidget {
-  const ReportTagsDropdown({super.key, required this.tags, required this.selectedTagIds, required this.onChanged});
+  const ReportTagsDropdown({
+    super.key,
+    required this.tags,
+    required this.selectedTagIds,
+    required this.onChanged,
+    this.compact = false,
+  });
 
   final List<Tag> tags;
   final List<String> selectedTagIds;
   final ValueChanged<List<String>> onChanged;
+  final bool compact;
 
   @override
   State<ReportTagsDropdown> createState() => _ReportTagsDropdownState();
@@ -60,7 +67,10 @@ class _ReportTagsDropdownState extends State<ReportTagsDropdown> {
                     child: DesktopMultiSelectPicker(
                       title: 'Tags',
                       icon: Icons.tag,
-                      items: widget.tags.map((t) => FilterItem(t.id, t.name, t.color)).toList(),
+                      items:
+                          widget.tags
+                              .map((t) => FilterItem(t.id, t.name, t.color))
+                              .toList(),
                       selectedIds: widget.selectedTagIds,
                       onSelectionChanged: widget.onChanged,
                       onClose: _closeDropdown,
@@ -87,13 +97,18 @@ class _ReportTagsDropdownState extends State<ReportTagsDropdown> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       isScrollControlled: true,
       builder:
           (context) => MobileMultiSelectPicker(
             title: 'Tags',
             icon: Icons.tag,
-            items: widget.tags.map((t) => FilterItem(t.id, t.name, t.color)).toList(),
+            items:
+                widget.tags
+                    .map((t) => FilterItem(t.id, t.name, t.color))
+                    .toList(),
             selectedIds: widget.selectedTagIds,
             onSelectionChanged: widget.onChanged,
             compactItems: true,
@@ -109,27 +124,46 @@ class _ReportTagsDropdownState extends State<ReportTagsDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedTags = widget.tags.where((t) => widget.selectedTagIds.contains(t.id)).toList();
+    final selectedTags =
+        widget.tags.where((t) => widget.selectedTagIds.contains(t.id)).toList();
 
     return CompositedTransformTarget(
       link: _layerLink,
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: widget.compact ? 10 : 14,
+          ),
           decoration: BoxDecoration(
             color: AppTheme.surfaceDark,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark),
+            border: Border.all(
+              color: _isOpen ? AppTheme.primaryAccent : AppTheme.borderDark,
+            ),
           ),
           child: Row(
             children: [
-              Icon(Icons.tag, size: 18, color: selectedTags.isNotEmpty ? AppTheme.primaryAccent : AppTheme.textMuted),
-              const SizedBox(width: 8),
+              Icon(
+                Icons.tag,
+                size: widget.compact ? 16 : 18,
+                color:
+                    selectedTags.isNotEmpty
+                        ? AppTheme.primaryAccent
+                        : AppTheme.textMuted,
+              ),
+              SizedBox(width: widget.compact ? 6 : 8),
               Expanded(
                 child:
                     selectedTags.isEmpty
-                        ? const Text('All Tags', style: TextStyle(color: AppTheme.textMuted))
+                        ? Text(
+                          'All Tags',
+                          style: TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: widget.compact ? 12 : 14,
+                          ),
+                        )
                         : Wrap(
                           spacing: 4,
                           runSpacing: 4,
@@ -138,33 +172,52 @@ class _ReportTagsDropdownState extends State<ReportTagsDropdown> {
                                 .take(2)
                                 .map(
                                   (tag) => Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.colorFromHex(tag.color).withValues(alpha: 0.2),
+                                      color: AppTheme.colorFromHex(
+                                        tag.color,
+                                      ).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       tag.name,
-                                      style: TextStyle(fontSize: 11, color: AppTheme.colorFromHex(tag.color)),
+                                      style: TextStyle(
+                                        fontSize: widget.compact ? 10 : 11,
+                                        color: AppTheme.colorFromHex(tag.color),
+                                      ),
                                     ),
                                   ),
                                 ),
                             if (selectedTags.length > 2)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.textMuted.withValues(alpha: 0.2),
+                                  color: AppTheme.textMuted.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   '+${selectedTags.length - 2}',
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.textMuted,
+                                  ),
                                 ),
                               ),
                           ],
                         ),
               ),
-              Icon(_isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: AppTheme.textMuted),
+              Icon(
+                _isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                color: AppTheme.textMuted,
+              ),
             ],
           ),
         ),

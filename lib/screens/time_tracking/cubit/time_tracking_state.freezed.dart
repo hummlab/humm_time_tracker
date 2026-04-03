@@ -35,13 +35,16 @@ mixin _$TimeTrackingState {
   /// Create a copy of TimeTrackingState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  $TimeTrackingStateCopyWith<TimeTrackingState> get copyWith => throw _privateConstructorUsedError;
+  $TimeTrackingStateCopyWith<TimeTrackingState> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
 abstract class $TimeTrackingStateCopyWith<$Res> {
-  factory $TimeTrackingStateCopyWith(TimeTrackingState value, $Res Function(TimeTrackingState) then) =
-      _$TimeTrackingStateCopyWithImpl<$Res, TimeTrackingState>;
+  factory $TimeTrackingStateCopyWith(
+    TimeTrackingState value,
+    $Res Function(TimeTrackingState) then,
+  ) = _$TimeTrackingStateCopyWithImpl<$Res, TimeTrackingState>;
   @useResult
   $Res call({
     DateTime selectedDate,
@@ -216,9 +219,12 @@ class _$TimeTrackingStateCopyWithImpl<$Res, $Val extends TimeTrackingState>
 }
 
 /// @nodoc
-abstract class _$$TimeTrackingStateImplCopyWith<$Res> implements $TimeTrackingStateCopyWith<$Res> {
-  factory _$$TimeTrackingStateImplCopyWith(_$TimeTrackingStateImpl value, $Res Function(_$TimeTrackingStateImpl) then) =
-      __$$TimeTrackingStateImplCopyWithImpl<$Res>;
+abstract class _$$TimeTrackingStateImplCopyWith<$Res>
+    implements $TimeTrackingStateCopyWith<$Res> {
+  factory _$$TimeTrackingStateImplCopyWith(
+    _$TimeTrackingStateImpl value,
+    $Res Function(_$TimeTrackingStateImpl) then,
+  ) = __$$TimeTrackingStateImplCopyWithImpl<$Res>;
   @override
   @useResult
   $Res call({
@@ -247,10 +253,13 @@ abstract class _$$TimeTrackingStateImplCopyWith<$Res> implements $TimeTrackingSt
 }
 
 /// @nodoc
-class __$$TimeTrackingStateImplCopyWithImpl<$Res> extends _$TimeTrackingStateCopyWithImpl<$Res, _$TimeTrackingStateImpl>
+class __$$TimeTrackingStateImplCopyWithImpl<$Res>
+    extends _$TimeTrackingStateCopyWithImpl<$Res, _$TimeTrackingStateImpl>
     implements _$$TimeTrackingStateImplCopyWith<$Res> {
-  __$$TimeTrackingStateImplCopyWithImpl(_$TimeTrackingStateImpl _value, $Res Function(_$TimeTrackingStateImpl) _then)
-    : super(_value, _then);
+  __$$TimeTrackingStateImplCopyWithImpl(
+    _$TimeTrackingStateImpl _value,
+    $Res Function(_$TimeTrackingStateImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of TimeTrackingState
   /// with the given fields replaced by the non-null parameter values.
@@ -435,20 +444,36 @@ class _$TimeTrackingStateImpl implements _TimeTrackingState {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$TimeTrackingStateImpl &&
-            (identical(other.selectedDate, selectedDate) || other.selectedDate == selectedDate) &&
-            const DeepCollectionEquality().equals(other._entriesForDate, _entriesForDate) &&
-            const DeepCollectionEquality().equals(other._weekEntries, _weekEntries) &&
+            (identical(other.selectedDate, selectedDate) ||
+                other.selectedDate == selectedDate) &&
+            const DeepCollectionEquality().equals(
+              other._entriesForDate,
+              _entriesForDate,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._weekEntries,
+              _weekEntries,
+            ) &&
             const DeepCollectionEquality().equals(other._projects, _projects) &&
             const DeepCollectionEquality().equals(other._tags, _tags) &&
-            (identical(other.activeTimer, activeTimer) || other.activeTimer == activeTimer) &&
-            (identical(other.currentUserId, currentUserId) || other.currentUserId == currentUserId) &&
-            (identical(other.currentMember, currentMember) || other.currentMember == currentMember) &&
-            (identical(other.hasManagerAccess, hasManagerAccess) || other.hasManagerAccess == hasManagerAccess) &&
-            (identical(other.hasActiveTimer, hasActiveTimer) || other.hasActiveTimer == hasActiveTimer) &&
-            (identical(other.isStoppingTimer, isStoppingTimer) || other.isStoppingTimer == isStoppingTimer) &&
-            (identical(other.toastMessage, toastMessage) || other.toastMessage == toastMessage) &&
-            (identical(other.toastType, toastType) || other.toastType == toastType) &&
-            (identical(other.editingEntry, editingEntry) || other.editingEntry == editingEntry));
+            (identical(other.activeTimer, activeTimer) ||
+                other.activeTimer == activeTimer) &&
+            (identical(other.currentUserId, currentUserId) ||
+                other.currentUserId == currentUserId) &&
+            (identical(other.currentMember, currentMember) ||
+                other.currentMember == currentMember) &&
+            (identical(other.hasManagerAccess, hasManagerAccess) ||
+                other.hasManagerAccess == hasManagerAccess) &&
+            (identical(other.hasActiveTimer, hasActiveTimer) ||
+                other.hasActiveTimer == hasActiveTimer) &&
+            (identical(other.isStoppingTimer, isStoppingTimer) ||
+                other.isStoppingTimer == isStoppingTimer) &&
+            (identical(other.toastMessage, toastMessage) ||
+                other.toastMessage == toastMessage) &&
+            (identical(other.toastType, toastType) ||
+                other.toastType == toastType) &&
+            (identical(other.editingEntry, editingEntry) ||
+                other.editingEntry == editingEntry));
   }
 
   @override
@@ -476,7 +501,10 @@ class _$TimeTrackingStateImpl implements _TimeTrackingState {
   @override
   @pragma('vm:prefer-inline')
   _$$TimeTrackingStateImplCopyWith<_$TimeTrackingStateImpl> get copyWith =>
-      __$$TimeTrackingStateImplCopyWithImpl<_$TimeTrackingStateImpl>(this, _$identity);
+      __$$TimeTrackingStateImplCopyWithImpl<_$TimeTrackingStateImpl>(
+        this,
+        _$identity,
+      );
 }
 
 abstract class _TimeTrackingState implements TimeTrackingState {
@@ -530,5 +558,6 @@ abstract class _TimeTrackingState implements TimeTrackingState {
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-  _$$TimeTrackingStateImplCopyWith<_$TimeTrackingStateImpl> get copyWith => throw _privateConstructorUsedError;
+  _$$TimeTrackingStateImplCopyWith<_$TimeTrackingStateImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }

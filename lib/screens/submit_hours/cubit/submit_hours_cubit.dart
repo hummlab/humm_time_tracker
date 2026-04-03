@@ -10,8 +10,11 @@ import 'package:time_tracker/screens/submit_hours/cubit/submit_hours_state.dart'
 import 'package:time_tracker/widgets/app_toast.dart';
 
 class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
-  SubmitHoursCubit(this._workspaceRepository, this._timeEntriesRepository, this._authDataProvider)
-    : super(SubmitHoursState.initial()) {
+  SubmitHoursCubit(
+    this._workspaceRepository,
+    this._timeEntriesRepository,
+    this._authDataProvider,
+  ) : super(SubmitHoursState.initial()) {
     _workspaceRepository.addListener(_syncFromSources);
     _authDataProvider.addListener(_syncFromSources);
     _syncFromSources();
@@ -23,12 +26,20 @@ class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
 
   void _syncFromSources() {
     final userId = _authDataProvider.currentUserId;
-    final draftEntries = _workspaceRepository.getDraftEntriesForCurrentUser(userId);
-    final pendingEntries = _workspaceRepository.getPendingEntriesForCurrentUser(userId);
-    final rejectedEntries = _workspaceRepository.getRejectedEntriesForCurrentUser(userId);
+    final draftEntries = _workspaceRepository.getDraftEntriesForCurrentUser(
+      userId,
+    );
+    final pendingEntries = _workspaceRepository.getPendingEntriesForCurrentUser(
+      userId,
+    );
+    final rejectedEntries = _workspaceRepository
+        .getRejectedEntriesForCurrentUser(userId);
 
     final selectedEntryIds = _filterSelectedToDraft(draftEntries);
-    final selectedTotalMinutes = _selectedTotalMinutes(draftEntries, selectedEntryIds);
+    final selectedTotalMinutes = _selectedTotalMinutes(
+      draftEntries,
+      selectedEntryIds,
+    );
 
     emit(
       state.copyWith(
@@ -56,15 +67,24 @@ class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
   List<SubmitHoursDateSection> _buildDateSections(List<TimeEntry> entries) {
     final groupedByDate = <DateTime, List<TimeEntry>>{};
     for (final entry in entries) {
-      final dateKey = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      final dateKey = DateTime(
+        entry.date.year,
+        entry.date.month,
+        entry.date.day,
+      );
       groupedByDate.putIfAbsent(dateKey, () => []).add(entry);
     }
 
-    final sortedDates = groupedByDate.keys.toList()..sort((a, b) => b.compareTo(a));
+    final sortedDates =
+        groupedByDate.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return sortedDates.map((date) {
       final dateEntries = groupedByDate[date] ?? [];
-      return SubmitHoursDateSection(date: date, entries: dateEntries, totalMinutes: _totalMinutes(dateEntries));
+      return SubmitHoursDateSection(
+        date: date,
+        entries: dateEntries,
+        totalMinutes: _totalMinutes(dateEntries),
+      );
     }).toList();
   }
 
@@ -72,10 +92,15 @@ class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
     return entries.fold(0, (sum, e) => sum + e.durationMinutes);
   }
 
-  int _selectedTotalMinutes(List<TimeEntry> draftEntries, List<String> selectedEntryIds) {
+  int _selectedTotalMinutes(
+    List<TimeEntry> draftEntries,
+    List<String> selectedEntryIds,
+  ) {
     if (selectedEntryIds.isEmpty) return 0;
     final selectedSet = selectedEntryIds.toSet();
-    return draftEntries.where((e) => selectedSet.contains(e.id)).fold(0, (sum, e) => sum + e.durationMinutes);
+    return draftEntries
+        .where((e) => selectedSet.contains(e.id))
+        .fold(0, (sum, e) => sum + e.durationMinutes);
   }
 
   void toggleEntrySelection(String entryId) {
@@ -90,7 +115,10 @@ class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
     emit(
       state.copyWith(
         selectedEntryIds: selectedList,
-        selectedTotalMinutes: _selectedTotalMinutes(state.draftEntries, selectedList),
+        selectedTotalMinutes: _selectedTotalMinutes(
+          state.draftEntries,
+          selectedList,
+        ),
       ),
     );
   }
@@ -105,37 +133,58 @@ class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
     }
 
     final ids = state.draftEntries.map((e) => e.id).toSet().toList();
-    emit(state.copyWith(selectedEntryIds: ids, selectedTotalMinutes: _selectedTotalMinutes(state.draftEntries, ids)));
+    emit(
+      state.copyWith(
+        selectedEntryIds: ids,
+        selectedTotalMinutes: _selectedTotalMinutes(state.draftEntries, ids),
+      ),
+    );
   }
 
   void selectThisMonth() {
     final now = DateTime.now();
     final startOfMonth = DateTime(now.year, now.month, 1);
     final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
-    _selectEntriesInRange(startOfMonth, endOfMonth, SubmitHoursQuickSelectPeriod.thisMonth);
+    _selectEntriesInRange(
+      startOfMonth,
+      endOfMonth,
+      SubmitHoursQuickSelectPeriod.thisMonth,
+    );
   }
 
   void selectLastMonth() {
     final now = DateTime.now();
     final startOfLastMonth = DateTime(now.year, now.month - 1, 1);
     final endOfLastMonth = DateTime(now.year, now.month, 0, 23, 59, 59);
-    _selectEntriesInRange(startOfLastMonth, endOfLastMonth, SubmitHoursQuickSelectPeriod.lastMonth);
+    _selectEntriesInRange(
+      startOfLastMonth,
+      endOfLastMonth,
+      SubmitHoursQuickSelectPeriod.lastMonth,
+    );
   }
 
-  void _selectEntriesInRange(DateTime start, DateTime end, SubmitHoursQuickSelectPeriod period) {
+  void _selectEntriesInRange(
+    DateTime start,
+    DateTime end,
+    SubmitHoursQuickSelectPeriod period,
+  ) {
     final entriesInRange =
         state.draftEntries.where((e) {
           return !e.date.isBefore(start) && !e.date.isAfter(end);
         }).toList();
 
     final newSelection = entriesInRange.map((e) => e.id).toList();
-    final activePeriod = newSelection.isNotEmpty ? period : SubmitHoursQuickSelectPeriod.none;
+    final activePeriod =
+        newSelection.isNotEmpty ? period : SubmitHoursQuickSelectPeriod.none;
 
     emit(
       state.copyWith(
         selectedEntryIds: newSelection,
         activeQuickSelect: activePeriod,
-        selectedTotalMinutes: _selectedTotalMinutes(state.draftEntries, newSelection),
+        selectedTotalMinutes: _selectedTotalMinutes(
+          state.draftEntries,
+          newSelection,
+        ),
         toastMessage: newSelection.isEmpty ? 'No entries in this period' : null,
         toastType: newSelection.isEmpty ? AppToastType.info : null,
       ),
@@ -150,7 +199,9 @@ class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
   Future<void> submitSelected() async {
     if (state.selectedEntryIds.isEmpty || state.isSubmitting) return;
 
-    emit(state.copyWith(isSubmitting: true, toastMessage: null, toastType: null));
+    emit(
+      state.copyWith(isSubmitting: true, toastMessage: null, toastType: null),
+    );
 
     final result = await _timeEntriesRepository.updateTimeEntriesStatusSafe(
       state.selectedEntryIds,
@@ -174,7 +225,8 @@ class SubmitHoursCubit extends BaseCubit<SubmitHoursState> {
         selectedEntryIds: [],
         activeQuickSelect: SubmitHoursQuickSelectPeriod.none,
         selectedTotalMinutes: 0,
-        toastMessage: '${state.selectedEntryIds.length} entries submitted for approval',
+        toastMessage:
+            '${state.selectedEntryIds.length} entries submitted for approval',
         toastType: AppToastType.success,
       ),
     );
